@@ -46,5 +46,11 @@
   "jest": {
     "preset": "jest-expo"
   },
-  "private": true
+  "private": true,
+  "overrides": {
+    "@react-native/jest-preset": {
+      "jest-mock": "^30.4.1",
+      "jest-environment-node": "^30.4.1"
+    }
+  }
 }
