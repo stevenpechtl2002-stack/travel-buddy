@@ -13,6 +13,7 @@ export interface Profile {
   languages: string[]
   verified: boolean
   is_premium: boolean
+  onboarding_complete: boolean
   created_at: string
 }
 

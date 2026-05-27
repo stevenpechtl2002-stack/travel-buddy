@@ -21,12 +21,13 @@ export default function DestinationsScreen() {
     const filled = destinations.filter(d => d.country.trim())
     if (filled.length === 0) return Alert.alert('Mindestens ein Reiseziel eingeben')
     if (!session) return
-    await saveDestinations(session.user.id, filled.map(d => ({
+    const { error } = await saveDestinations(session.user.id, filled.map(d => ({
       country: d.country,
       city: d.city || null,
       date_from: d.date_from || null,
       date_to: d.date_to || null,
     })))
+    if (error) return Alert.alert('Fehler', 'Speichern fehlgeschlagen')
     router.push('/onboarding/travel-style')
   }
 

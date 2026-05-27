@@ -3,7 +3,7 @@ import { useAuth } from '@/src/hooks/useAuth'
 import { useProfile } from '@/src/hooks/useProfile'
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 
 const LANGUAGES = ['Deutsch', 'Englisch', 'Spanisch', 'Französisch', 'Italienisch',
   'Portugiesisch', 'Japanisch', 'Chinesisch', 'Arabisch']
@@ -24,11 +24,15 @@ export default function BioScreen() {
   const handleFinish = async () => {
     if (!session) return
     setLoading(true)
-    await updateProfile(session.user.id, {
-      bio, languages: selectedLangs, onboarding_complete: true,
-    })
-    setLoading(false)
-    router.replace('/(tabs)/discover')
+    try {
+      const { error } = await updateProfile(session.user.id, {
+        bio, languages: selectedLangs, onboarding_complete: true,
+      })
+      if (error) return Alert.alert('Fehler', 'Speichern fehlgeschlagen')
+      router.replace('/(tabs)/discover')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

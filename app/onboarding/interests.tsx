@@ -25,7 +25,8 @@ export default function InterestsScreen() {
   const handleNext = async () => {
     if (selected.length < 3) return Alert.alert('Bitte mindestens 3 Interessen wählen')
     if (!session) return
-    await setInterests(session.user.id, selected)
+    const { error } = await setInterests(session.user.id, selected)
+    if (error) return Alert.alert('Fehler', 'Speichern fehlgeschlagen')
     router.push('/onboarding/bio')
   }
 

@@ -18,6 +18,8 @@ export default function BasicsScreen() {
   const router = useRouter()
 
   const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
+    if (status !== 'granted') return Alert.alert('Berechtigung benötigt', 'Bitte erlaube den Zugriff auf deine Fotos.')
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true, aspect: [1, 1], quality: 0.8,
@@ -37,15 +39,21 @@ export default function BasicsScreen() {
 
   const handleNext = async () => {
     if (!name || !age || !country) return Alert.alert('Bitte alle Felder ausfüllen')
+    const n = parseInt(age)
+    if (isNaN(n) || n < 13 || n > 120) return Alert.alert('Bitte ein gültiges Alter eingeben')
     if (!session) return
     setLoading(true)
-    let profile_image_url: string | null = null
-    if (imageUri) profile_image_url = await uploadImage(session.user.id, imageUri)
-    await updateProfile(session.user.id, {
-      name, age: parseInt(age), country, profile_image_url,
-    })
-    setLoading(false)
-    router.push('/onboarding/destinations')
+    try {
+      let profile_image_url: string | null = null
+      if (imageUri) profile_image_url = await uploadImage(session.user.id, imageUri)
+      const { error } = await updateProfile(session.user.id, {
+        name, age: n, country, profile_image_url,
+      })
+      if (error) return Alert.alert('Fehler', 'Speichern fehlgeschlagen')
+      router.push('/onboarding/destinations')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (

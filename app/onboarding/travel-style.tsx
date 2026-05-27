@@ -4,7 +4,7 @@ import { useProfile } from '@/src/hooks/useProfile'
 import { TravelStyle } from '@/src/types'
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
-import { Pressable, StyleSheet, Text, View } from 'react-native'
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native'
 
 const STYLES: { key: TravelStyle; label: string }[] = [
   { key: 'backpacker', label: '🎒 Backpacker' },
@@ -22,7 +22,8 @@ export default function TravelStyleScreen() {
 
   const handleNext = async () => {
     if (!selected || !session) return
-    await updateProfile(session.user.id, { travel_style: selected })
+    const { error } = await updateProfile(session.user.id, { travel_style: selected })
+    if (error) return Alert.alert('Fehler', 'Speichern fehlgeschlagen')
     router.push('/onboarding/interests')
   }
 

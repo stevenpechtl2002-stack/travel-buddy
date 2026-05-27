@@ -8,7 +8,8 @@ export function useProfile() {
   }
 
   const setDestinations = async (userId: string, destinations: Omit<TravelDestination, 'id' | 'user_id'>[]) => {
-    await supabase.from('travel_destinations').delete().eq('user_id', userId)
+    const { error: deleteError } = await supabase.from('travel_destinations').delete().eq('user_id', userId)
+    if (deleteError) return { error: deleteError }
     if (destinations.length === 0) return { error: null }
     const { error } = await supabase.from('travel_destinations').insert(
       destinations.map(d => ({ ...d, user_id: userId }))
@@ -17,7 +18,8 @@ export function useProfile() {
   }
 
   const setInterests = async (userId: string, interests: string[]) => {
-    await supabase.from('user_interests').delete().eq('user_id', userId)
+    const { error: deleteError } = await supabase.from('user_interests').delete().eq('user_id', userId)
+    if (deleteError) return { error: deleteError }
     if (interests.length === 0) return { error: null }
     const { error } = await supabase.from('user_interests').insert(
       interests.map(interest => ({ user_id: userId, interest }))
