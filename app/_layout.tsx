@@ -13,7 +13,7 @@ export default function RootLayout() {
     const inAuth = segments[0] === '(auth)'
     if (!session && !inAuth) router.replace('/(auth)/login')
     else if (session && inAuth) router.replace('/(tabs)/discover')
-  }, [session, loading])
+  }, [session, loading, segments, router])
 
   if (loading) return <View style={{ flex: 1, justifyContent: 'center' }}><ActivityIndicator /></View>
   return <Slot />

@@ -7,8 +7,8 @@ export function useAuth() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session)
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (!error) setSession(data.session)
       setLoading(false)
     })
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {

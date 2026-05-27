@@ -12,6 +12,7 @@ export default function LoginScreen() {
   const router = useRouter()
 
   const handleLogin = async () => {
+    if (!email || !password) return Alert.alert('Fehler', 'Bitte E-Mail und Passwort eingeben')
     setLoading(true)
     const { error } = await signIn(email, password)
     setLoading(false)

@@ -12,6 +12,8 @@ export default function RegisterScreen() {
   const router = useRouter()
 
   const handleRegister = async () => {
+    if (!email || !password) return Alert.alert('Fehler', 'Bitte E-Mail und Passwort eingeben')
+    if (password.length < 6) return Alert.alert('Fehler', 'Passwort muss mindestens 6 Zeichen haben')
     setLoading(true)
     const { error } = await signUp(email, password)
     setLoading(false)
