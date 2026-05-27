@@ -75,11 +75,15 @@ create policy "profiles_update" on profiles for update using (auth.uid() = id);
 
 -- Destinations: anyone can read, owner can write
 create policy "destinations_read" on travel_destinations for select using (true);
-create policy "destinations_write" on travel_destinations for all using (auth.uid() = user_id);
+create policy "destinations_write" on travel_destinations
+  for all using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
 
 -- Interests: anyone can read, owner can write
 create policy "interests_read" on user_interests for select using (true);
-create policy "interests_write" on user_interests for all using (auth.uid() = user_id);
+create policy "interests_write" on user_interests
+  for all using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
 
 -- Swipes: only owner can read/write their own swipes
 create policy "swipes_own" on swipes for all using (auth.uid() = swiper_id);
@@ -87,7 +91,8 @@ create policy "swipes_own" on swipes for all using (auth.uid() = swiper_id);
 -- Matches: parties can read their own matches
 create policy "matches_read" on matches for select
   using (auth.uid() = user_a_id or auth.uid() = user_b_id);
-create policy "matches_insert" on matches for insert with check (true);
+create policy "matches_insert" on matches for insert
+  with check (auth.uid() = user_a_id or auth.uid() = user_b_id);
 
 -- Messages: parties of the match can read/write
 create policy "messages_read" on messages for select
@@ -99,13 +104,22 @@ create policy "messages_read" on messages for select
     )
   );
 create policy "messages_insert" on messages for insert
-  with check (auth.uid() = sender_id);
+  with check (
+    auth.uid() = sender_id
+    and exists (
+      select 1 from matches
+      where matches.id = messages.match_id
+        and (matches.user_a_id = auth.uid() or matches.user_b_id = auth.uid())
+    )
+  );
 
 -- Auto-create profile on signup
 create or replace function handle_new_user()
-returns trigger language plpgsql security definer as $$
+returns trigger language plpgsql security definer
+set search_path = public
+as $$
 begin
-  insert into profiles (id, email) values (new.id, new.email);
+  insert into public.profiles (id, email) values (new.id, new.email);
   return new;
 end;
 $$;
@@ -113,6 +127,12 @@ $$;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure handle_new_user();
+
+-- Indexes for common query patterns
+create index on travel_destinations(user_id);
+create index on matches(user_a_id);
+create index on matches(user_b_id);
+create index on messages(match_id, created_at);
 
 -- Enable realtime for messages
 alter publication supabase_realtime add table messages;
