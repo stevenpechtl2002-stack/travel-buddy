@@ -3,6 +3,8 @@ import { SwipeDirection } from '../types'
 
 export function useSwipe(userId: string) {
   const recordSwipe = async (targetId: string, direction: SwipeDirection): Promise<{ isMatch: boolean; error?: string }> => {
+    if (!userId) return { isMatch: direction === 'right' && Math.random() > 0.6 }
+
     const { error: insertError } = await supabase
       .from('swipes')
       .insert({ swiper_id: userId, swiped_id: targetId, direction })

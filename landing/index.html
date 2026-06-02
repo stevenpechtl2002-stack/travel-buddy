@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Travel Buddy – Finde deinen Reisepartner</title>
+  <meta name="description" content="Travel Buddy ist die App für Solo-Reisende. Swipe dich durch Profile, finde Reisepartner und entdecke die Welt gemeinsam." />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f0f0f;
+      color: #fff;
+      overflow-x: hidden;
+    }
+
+    /* NAV */
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 40px;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      background: rgba(15,15,15,0.9);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .logo {
+      font-size: 22px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #f7971e, #ffd200);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .nav-cta {
+      background: linear-gradient(135deg, #f7971e, #ffd200);
+      color: #000;
+      padding: 10px 24px;
+      border-radius: 50px;
+      font-weight: 700;
+      text-decoration: none;
+      font-size: 14px;
+      transition: opacity 0.2s;
+    }
+    .nav-cta:hover { opacity: 0.85; }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 20px 80px;
+      background: radial-gradient(ellipse at top, rgba(247,151,30,0.12) 0%, transparent 60%);
+    }
+    .hero-badge {
+      display: inline-block;
+      background: rgba(247,151,30,0.15);
+      border: 1px solid rgba(247,151,30,0.3);
+      color: #ffd200;
+      padding: 6px 16px;
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      letter-spacing: 0.5px;
+    }
+    .hero h1 {
+      font-size: clamp(40px, 7vw, 80px);
+      font-weight: 900;
+      line-height: 1.05;
+      margin-bottom: 24px;
+      letter-spacing: -1px;
+    }
+    .hero h1 span {
+      background: linear-gradient(135deg, #f7971e, #ffd200);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero p {
+      font-size: clamp(16px, 2.5vw, 20px);
+      color: rgba(255,255,255,0.6);
+      max-width: 520px;
+      line-height: 1.6;
+      margin-bottom: 40px;
+    }
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #f7971e, #ffd200);
+      color: #000;
+      padding: 16px 36px;
+      border-radius: 50px;
+      font-weight: 800;
+      text-decoration: none;
+      font-size: 16px;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+    .btn-primary:hover { transform: scale(1.04); opacity: 0.9; }
+    .btn-secondary {
+      background: rgba(255,255,255,0.08);
+      color: #fff;
+      padding: 16px 36px;
+      border-radius: 50px;
+      font-weight: 700;
+      text-decoration: none;
+      font-size: 16px;
+      border: 1px solid rgba(255,255,255,0.15);
+      transition: background 0.2s;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,0.14); }
+
+    /* PHONE MOCKUP */
+    .mockup-section {
+      display: flex;
+      justify-content: center;
+      padding: 40px 20px 80px;
+    }
+    .phone {
+      width: 260px;
+      height: 520px;
+      background: linear-gradient(160deg, #1a1a1a, #111);
+      border-radius: 40px;
+      border: 2px solid rgba(255,255,255,0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05);
+      position: relative;
+    }
+    .phone-notch {
+      width: 80px;
+      height: 24px;
+      background: #0f0f0f;
+      border-radius: 0 0 20px 20px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 2;
+    }
+    .phone-screen {
+      flex: 1;
+      background: linear-gradient(160deg, #f7971e, #ffd200);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 20px;
+      position: relative;
+    }
+    .phone-avatar {
+      position: absolute;
+      top: 40px;
+      font-size: 80px;
+    }
+    .phone-card-info {
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(8px);
+      border-radius: 16px;
+      padding: 14px 16px;
+      width: 100%;
+    }
+    .phone-name { font-size: 18px; font-weight: 800; color: #fff; }
+    .phone-dest { font-size: 12px; color: rgba(255,255,255,0.8); margin-top: 4px; }
+    .phone-tag {
+      display: inline-block;
+      background: rgba(247,151,30,0.8);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 20px;
+      margin-top: 6px;
+      margin-right: 4px;
+    }
+    .like-badge {
+      position: absolute;
+      top: 30px;
+      left: 16px;
+      border: 3px solid #4CAF50;
+      border-radius: 6px;
+      padding: 4px 8px;
+      transform: rotate(-20deg);
+      color: #4CAF50;
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    /* HOW IT WORKS */
+    .section {
+      padding: 80px 20px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .section-label {
+      text-align: center;
+      color: #f7971e;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .section h2 {
+      text-align: center;
+      font-size: clamp(28px, 4vw, 44px);
+      font-weight: 900;
+      margin-bottom: 60px;
+      letter-spacing: -0.5px;
+    }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 24px;
+    }
+    .step {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 28px;
+      transition: border-color 0.2s;
+    }
+    .step:hover { border-color: rgba(247,151,30,0.3); }
+    .step-icon { font-size: 36px; margin-bottom: 16px; }
+    .step h3 { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .step p { font-size: 14px; color: rgba(255,255,255,0.55); line-height: 1.6; }
+
+    /* FEATURES */
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    .feature {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 20px;
+      padding: 24px;
+    }
+    .feature-icon { font-size: 28px; margin-bottom: 12px; }
+    .feature h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .feature p { font-size: 13px; color: rgba(255,255,255,0.5); line-height: 1.6; }
+
+    /* CTA BANNER */
+    .cta-banner {
+      margin: 40px 20px 80px;
+      background: linear-gradient(135deg, rgba(247,151,30,0.15), rgba(255,210,0,0.1));
+      border: 1px solid rgba(247,151,30,0.25);
+      border-radius: 28px;
+      padding: 60px 40px;
+      text-align: center;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .cta-banner h2 {
+      font-size: clamp(26px, 4vw, 40px);
+      font-weight: 900;
+      margin-bottom: 16px;
+    }
+    .cta-banner p {
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 32px;
+      font-size: 16px;
+    }
+
+    /* FOOTER */
+    footer {
+      border-top: 1px solid rgba(255,255,255,0.07);
+      padding: 32px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: gap;
+      gap: 16px;
+    }
+    footer .logo { font-size: 18px; }
+    .footer-links { display: flex; gap: 24px; flex-wrap: wrap; }
+    .footer-links a {
+      color: rgba(255,255,255,0.4);
+      text-decoration: none;
+      font-size: 13px;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: #fff; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="logo">✈ Travel Buddy</div>
+    <a href="#download" class="nav-cta">App herunterladen</a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-badge">🌍 Die App für Solo-Reisende</div>
+    <h1>Finde deinen<br /><span>Reisepartner</span></h1>
+    <p>Swipe dich durch Profile von Gleichgesinnten, matche mit jemandem der dieselben Ziele hat und reise gemeinsam.</p>
+    <div class="hero-buttons">
+      <a href="#download" class="btn-primary">📱 Jetzt kostenlos starten</a>
+      <a href="#how" class="btn-secondary">Wie es funktioniert</a>
+    </div>
+  </section>
+
+  <!-- PHONE MOCKUP -->
+  <div class="mockup-section">
+    <div class="phone">
+      <div class="phone-notch"></div>
+      <div class="phone-screen">
+        <div class="phone-avatar">👩</div>
+        <div class="like-badge">LIKE ♥</div>
+        <div class="phone-card-info">
+          <div class="phone-name">Laura, 26</div>
+          <div class="phone-dest">🌍 Bangkok · Bali</div>
+          <div>
+            <span class="phone-tag">Tauchen</span>
+            <span class="phone-tag">Fotografie</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <section class="section" id="how">
+    <div class="section-label">So einfach geht's</div>
+    <h2>In 3 Schritten zum Reisepartner</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-icon">✏️</div>
+        <h3>Profil erstellen</h3>
+        <p>Trag deine Reiseziele, Interessen und deinen Reisestil ein. Lade ein Foto hoch.</p>
+      </div>
+      <div class="step">
+        <div class="step-icon">👆</div>
+        <h3>Swipen</h3>
+        <p>Swipe rechts wenn dir jemand gefällt, links wenn nicht – genau wie bei Tinder, nur für Reisen.</p>
+      </div>
+      <div class="step">
+        <div class="step-icon">💬</div>
+        <h3>Matchen & Chatten</h3>
+        <p>Bei gegenseitigem Like entsteht ein Match. Schreib direkt in der App und plant eure Reise.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section">
+    <div class="section-label">Features</div>
+    <h2>Alles was du brauchst</h2>
+    <div class="features">
+      <div class="feature">
+        <div class="feature-icon">🗺️</div>
+        <h3>Reiseziele teilen</h3>
+        <p>Trag ein wohin du reisen möchtest und finde andere die zur gleichen Zeit am gleichen Ort sind.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">💬</div>
+        <h3>In-App Chat</h3>
+        <p>Kommuniziere sicher direkt in der App ohne private Nummer oder Social Media teilen zu müssen.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">✈️</div>
+        <h3>Flüge suchen</h3>
+        <p>Direkt aus der App Flüge zu deinen Reisezielen finden und gemeinsam buchen.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">⭐</div>
+        <h3>Buddy Pro</h3>
+        <p>Unbegrenzte Matches, Priority-Sichtbarkeit und exklusive Features für 9,99 €/Monat.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🔒</div>
+        <h3>Sicher & Verifiziert</h3>
+        <p>Profil-Verifizierung und Meldungsfunktion für eine sichere Community.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">🌐</div>
+        <h3>iOS & Android</h3>
+        <p>Verfügbar im App Store und Google Play Store. Kostenlos herunterladen.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <div class="cta-banner" id="download">
+    <h2>Bereit für dein nächstes Abenteuer?</h2>
+    <p>Lade Travel Buddy kostenlos herunter und finde deinen Reisepartner.</p>
+    <div class="hero-buttons">
+      <a href="#" class="btn-primary">🍎 App Store</a>
+      <a href="#" class="btn-secondary">🤖 Google Play</a>
+    </div>
+  </div>
+
+  <footer>
+    <div class="logo">✈ Travel Buddy</div>
+    <div class="footer-links">
+      <a href="/impressum">Impressum</a>
+      <a href="/datenschutz">Datenschutz</a>
+      <a href="mailto:stevenpechtl2002@gmail.com">Kontakt</a>
+    </div>
+  </footer>
+
+</body>
+</html>

@@ -90,11 +90,11 @@ export default function DiscoverScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, padding: spacing.lg },
+  container: { flex: 1, backgroundColor: colors.background, paddingHorizontal: spacing.lg, paddingTop: spacing.md },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { fontSize: 22, fontWeight: 'bold', color: colors.primary,
-    textAlign: 'center', marginBottom: spacing.lg, marginTop: spacing.lg },
-  buttons: { flexDirection: 'row', justifyContent: 'center', gap: 24, marginTop: spacing.xl },
+    textAlign: 'center', marginBottom: spacing.md },
+  buttons: { flexDirection: 'row', justifyContent: 'center', gap: 32, marginTop: spacing.lg },
   skipBtn: { width: 64, height: 64, borderRadius: 32, backgroundColor: colors.surface,
     justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.border },
   skipBtnText: { fontSize: 24, color: colors.textMuted },

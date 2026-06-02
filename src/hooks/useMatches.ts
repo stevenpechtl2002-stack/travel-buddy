@@ -2,13 +2,46 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { Match, Profile } from '../types'
 
+const DEMO_MATCHES: Match[] = [
+  {
+    id: 'match-1',
+    user_a_id: 'me',
+    user_b_id: 'demo-1',
+    created_at: new Date().toISOString(),
+    other_user: {
+      id: 'demo-1', name: 'Laura', age: 26, email: '', country: 'Thailand',
+      bio: 'Solo-Reisende auf der Suche nach Abenteuern 🌏',
+      profile_image_url: null, travel_style: 'adventure',
+      languages: [], verified: false, is_premium: false,
+      onboarding_complete: true, created_at: '',
+    },
+  },
+  {
+    id: 'match-2',
+    user_a_id: 'me',
+    user_b_id: 'demo-2',
+    created_at: new Date().toISOString(),
+    other_user: {
+      id: 'demo-2', name: 'Max', age: 29, email: '', country: 'Japan',
+      bio: 'Backpacker & Kaffeeliebhaber ☕',
+      profile_image_url: null, travel_style: 'backpacker',
+      languages: [], verified: false, is_premium: false,
+      onboarding_complete: true, created_at: '',
+    },
+  },
+]
+
 export function useMatches(userId: string) {
   const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!userId) return
+    if (!userId) {
+      setMatches(DEMO_MATCHES)
+      setLoading(false)
+      return
+    }
     loadMatches()
   }, [userId])
 
