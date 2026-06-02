@@ -2,25 +2,33 @@ import ChatBubble from '@/src/components/ChatBubble'
 import { colors, spacing } from '@/src/constants/theme'
 import { useAuth } from '@/src/hooks/useAuth'
 import { useChat } from '@/src/hooks/useChat'
+import { useMatches } from '@/src/hooks/useMatches'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useRef, useState } from 'react'
-import { FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
+import { Alert, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'react-native'
 
 export default function ChatScreen() {
   const { matchId } = useLocalSearchParams<{ matchId: string }>()
   const { session } = useAuth()
   const userId = session?.user.id ?? ''
-  const { messages, sendMessage } = useChat(matchId, userId)
+  const { messages, sendMessage, error } = useChat(matchId, userId)
+  const { matches } = useMatches(userId)
   const [input, setInput] = useState('')
   const listRef = useRef<FlatList>(null)
   const router = useRouter()
+
+  const match = matches.find(m => m.id === matchId)
+  const partnerName = match?.other_user.name ?? 'Chat'
 
   const handleSend = async () => {
     const text = input.trim()
     if (!text) return
     setInput('')
-    await sendMessage(text)
-    listRef.current?.scrollToEnd()
+    try {
+      await sendMessage(text)
+    } catch {
+      Alert.alert('Fehler', 'Nachricht konnte nicht gesendet werden.')
+    }
   }
 
   return (
@@ -30,9 +38,14 @@ export default function ChatScreen() {
         <Pressable onPress={() => router.back()} accessibilityLabel="Zurück" accessibilityRole="button">
           <Text style={styles.back}>‹ Zurück</Text>
         </Pressable>
-        <Text style={styles.title}>Chat</Text>
+        <Text style={styles.title}>{partnerName}</Text>
         <View style={{ width: 60 }} />
       </View>
+      {error && (
+        <View style={styles.errorBanner}>
+          <Text style={styles.errorText}>Fehler beim Laden der Nachrichten</Text>
+        </View>
+      )}
       <FlatList ref={listRef} data={messages} keyExtractor={m => m.id}
         contentContainerStyle={styles.messageList}
         renderItem={({ item }) => (
@@ -62,6 +75,8 @@ const styles = StyleSheet.create({
   back: { fontSize: 18, color: colors.primary, width: 60 },
   title: { fontSize: 18, fontWeight: 'bold', color: colors.text },
   messageList: { padding: spacing.md, paddingBottom: spacing.xl },
+  errorBanner: { backgroundColor: '#ffe0e0', padding: spacing.sm },
+  errorText: { color: colors.error, fontSize: 13, textAlign: 'center' },
   inputRow: { flexDirection: 'row', padding: spacing.md, gap: spacing.sm,
     borderTopWidth: 1, borderColor: colors.border },
   input: { flex: 1, backgroundColor: colors.surface, borderRadius: 24,

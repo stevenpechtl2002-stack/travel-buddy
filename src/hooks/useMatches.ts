@@ -5,6 +5,7 @@ import { Match, Profile } from '../types'
 export function useMatches(userId: string) {
   const [matches, setMatches] = useState<Match[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!userId) return
@@ -13,26 +14,44 @@ export function useMatches(userId: string) {
 
   const loadMatches = async () => {
     setLoading(true)
-    const { data } = await supabase
+    setError(null)
+    const { data, error: fetchError } = await supabase
       .from('matches')
       .select('*')
       .or(`user_a_id.eq.${userId},user_b_id.eq.${userId}`)
       .order('created_at', { ascending: false })
 
+    if (fetchError) {
+      setError(fetchError.message)
+      setLoading(false)
+      return
+    }
+
     if (!data) { setLoading(false); return }
 
-    const enriched: Match[] = (await Promise.all(
-      data.map(async (match: { id: string; user_a_id: string; user_b_id: string; created_at: string }) => {
+    const profileIds = data.map((match: { user_a_id: string; user_b_id: string }) =>
+      match.user_a_id === userId ? match.user_b_id : match.user_a_id
+    )
+
+    const { data: profilesData } = await supabase
+      .from('profiles')
+      .select('*')
+      .in('id', profileIds)
+
+    const profileMap = new Map<string, Profile>((profilesData ?? []).map((p: Profile) => [p.id, p]))
+
+    const enriched: Match[] = data
+      .map((match: { id: string; user_a_id: string; user_b_id: string; created_at: string }) => {
         const otherId = match.user_a_id === userId ? match.user_b_id : match.user_a_id
-        const { data: profile } = await supabase.from('profiles').select('*').eq('id', otherId).single()
+        const profile = profileMap.get(otherId)
         if (!profile) return null
-        return { ...match, other_user: profile as Profile }
+        return { ...match, other_user: profile }
       })
-    )).filter((m): m is Match => m !== null)
+      .filter((m: Match | null): m is Match => m !== null)
 
     setMatches(enriched)
     setLoading(false)
   }
 
-  return { matches, loading }
+  return { matches, loading, error, refresh: loadMatches }
 }
