@@ -6,26 +6,45 @@ import { useDiscover } from '@/src/hooks/useDiscover'
 import { useSwipe } from '@/src/hooks/useSwipe'
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, Alert, Pressable, StyleSheet, Text, View } from 'react-native'
 
 export default function DiscoverScreen() {
   const { session } = useAuth()
   const userId = session?.user.id ?? ''
-  const { candidates, loading, reload, removeTop } = useDiscover(userId)
+  const { candidates, loading, error, reload, removeTop } = useDiscover(userId)
   const { recordSwipe } = useSwipe(userId)
   const [matchInfo, setMatchInfo] = useState<{ name: string } | null>(null)
+  const [processing, setProcessing] = useState(false)
   const router = useRouter()
 
   const handleSwipe = async (direction: 'left' | 'right') => {
+    if (processing) return
     const top = candidates[0]
     if (!top) return
+    setProcessing(true)
+    const { isMatch, error: swipeError } = await recordSwipe(top.profile.id, direction)
+    if (swipeError) {
+      Alert.alert('Fehler', 'Swipe konnte nicht gespeichert werden. Bitte versuche es erneut.')
+      setProcessing(false)
+      return
+    }
+    const remainingAfterRemove = candidates.length - 1
     removeTop()
-    const { isMatch } = await recordSwipe(top.profile.id, direction)
     if (isMatch) setMatchInfo({ name: top.profile.name })
-    if (candidates.length <= 3) reload()
+    if (remainingAfterRemove <= 3) reload()
+    setProcessing(false)
   }
 
   if (loading) return <View style={styles.center}><ActivityIndicator color={colors.primary} /></View>
+
+  if (error) return (
+    <View style={styles.center}>
+      <Text style={styles.emptyText}>❌ Fehler beim Laden</Text>
+      <Pressable style={styles.reloadButton} onPress={reload}>
+        <Text style={styles.reloadText}>Erneut versuchen</Text>
+      </Pressable>
+    </View>
+  )
 
   if (candidates.length === 0) return (
     <View style={styles.center}>
@@ -49,10 +68,14 @@ export default function DiscoverScreen() {
         onSwipeRight={() => handleSwipe('right')}
       />
       <View style={styles.buttons}>
-        <Pressable style={styles.skipBtn} onPress={() => handleSwipe('left')}>
+        <Pressable style={[styles.skipBtn, processing && styles.btnDisabled]}
+          onPress={() => handleSwipe('left')} disabled={processing}
+          accessibilityLabel="Profil überspringen" accessibilityRole="button">
           <Text style={styles.skipBtnText}>✕</Text>
         </Pressable>
-        <Pressable style={styles.likeBtn} onPress={() => handleSwipe('right')}>
+        <Pressable style={[styles.likeBtn, processing && styles.btnDisabled]}
+          onPress={() => handleSwipe('right')} disabled={processing}
+          accessibilityLabel="Profil liken" accessibilityRole="button">
           <Text style={styles.likeBtnText}>♥</Text>
         </Pressable>
       </View>
@@ -78,6 +101,7 @@ const styles = StyleSheet.create({
   likeBtn: { width: 64, height: 64, borderRadius: 32,
     backgroundColor: colors.primary, justifyContent: 'center', alignItems: 'center' },
   likeBtnText: { fontSize: 24, color: '#fff' },
+  btnDisabled: { opacity: 0.5 },
   emptyText: { fontSize: 16, color: colors.textMuted, marginBottom: spacing.lg },
   reloadButton: { backgroundColor: colors.primary, borderRadius: 12,
     padding: spacing.md, alignItems: 'center' },

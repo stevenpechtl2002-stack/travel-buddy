@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { Profile, TravelDestination, UserInterest } from '../types'
 
@@ -11,28 +11,36 @@ interface DiscoverProfile {
 export function useDiscover(userId: string) {
   const [candidates, setCandidates] = useState<DiscoverProfile[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
+  const loadCandidates = useCallback(async () => {
     if (!userId) return
-    loadCandidates()
-  }, [userId])
-
-  const loadCandidates = async () => {
     setLoading(true)
-    // Get IDs already swiped
+    setError(null)
+
     const { data: swiped } = await supabase
       .from('swipes').select('swiped_id').eq('swiper_id', userId)
     const swipedIds = (swiped ?? []).map((s: { swiped_id: string }) => s.swiped_id)
-    swipedIds.push(userId) // exclude self
+    swipedIds.push(userId)
 
-    const { data: profiles } = await supabase
+    const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('*')
       .eq('onboarding_complete', true)
-      .not('id', 'in', `(${swipedIds.join(',')})`)
+      .not('id', 'in', `(${swipedIds.map(id => `"${id}"`).join(',')})`)
       .limit(20)
 
-    if (!profiles) { setLoading(false); return }
+    if (profilesError) {
+      setError(profilesError.message)
+      setLoading(false)
+      return
+    }
+
+    if (!profiles || profiles.length === 0) {
+      setCandidates([])
+      setLoading(false)
+      return
+    }
 
     const enriched: DiscoverProfile[] = await Promise.all(
       profiles.map(async (profile: Profile) => {
@@ -45,9 +53,14 @@ export function useDiscover(userId: string) {
     )
     setCandidates(enriched)
     setLoading(false)
-  }
+  }, [userId])
+
+  useEffect(() => {
+    if (!userId) return
+    loadCandidates()
+  }, [userId, loadCandidates])
 
   const removeTop = () => setCandidates(prev => prev.slice(1))
 
-  return { candidates, loading, reload: loadCandidates, removeTop }
+  return { candidates, loading, error, reload: loadCandidates, removeTop }
 }
