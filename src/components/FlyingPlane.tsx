@@ -1,85 +1,75 @@
-import Svg, { Path, Ellipse, G } from 'react-native-svg'
+import Svg, { Path, Ellipse, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg'
 import { View, StyleSheet } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 
-const TRAIL_WIDTH = 180
+const TRAIL_WIDTH = 160
 
 export default function FlyingPlane() {
   return (
     <View style={styles.wrapper}>
-      {/* Contrail lines */}
+      {/* Contrail */}
       <View style={styles.trails}>
         <LinearGradient
-          colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.5)', 'rgba(255,255,255,0.9)']}
+          colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.7)', 'rgba(255,255,255,1)']}
           start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }}
           style={styles.trail1}
         />
         <LinearGradient
-          colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.3)', 'rgba(255,255,255,0.7)']}
+          colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.4)', 'rgba(255,255,255,0.8)']}
           start={{ x: 0, y: 0.5 }} end={{ x: 1, y: 0.5 }}
           style={styles.trail2}
         />
       </View>
 
-      {/* Plane SVG — viewed from slightly below, flying right */}
-      <Svg width={48} height={38} viewBox="0 0 48 38">
-        {/* Fuselage — tapered tube */}
+      {/* Plane SVG */}
+      <Svg width={64} height={50} viewBox="0 0 64 50">
+        <Defs>
+          <SvgGradient id="body" x1="0" y1="0" x2="1" y2="0">
+            <Stop offset="0" stopColor="#c8d8ff" />
+            <Stop offset="1" stopColor="#ffffff" />
+          </SvgGradient>
+          <SvgGradient id="wing" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor="#ffffff" />
+            <Stop offset="1" stopColor="#a0b8ff" />
+          </SvgGradient>
+        </Defs>
+
+        {/* Fuselage */}
         <Path
-          d="M2,19 Q6,16 20,17.5 Q36,17 44,18 Q46,18.5 44,19.5 Q36,21 20,20.5 Q6,22 2,19Z"
-          fill="white"
+          d="M4,25 Q10,21 26,23 Q46,22 58,24 Q61,24.5 58,26 Q46,28 26,27 Q10,29 4,25Z"
+          fill="url(#body)"
+          stroke="#8899cc"
+          strokeWidth="0.5"
         />
-        {/* Nose cone */}
-        <Path d="M42,18 Q48,18.5 44,19.5 Q42,19.5 42,18Z" fill="#e8e8ff"/>
+        {/* Nose */}
+        <Path d="M56,23.5 Q64,24.5 58,26 Q56,26 56,23.5Z" fill="#e0e8ff" />
 
-        {/* Main wings — swept back */}
-        <Path
-          d="M18,18.5 L10,7 L16,7 L24,17 Z"
-          fill="white"
-        />
-        <Path
-          d="M18,19.5 L10,31 L16,31 L24,21 Z"
-          fill="rgba(220,220,255,0.9)"
-        />
-        {/* Wing tips */}
-        <Path d="M10,7 L8,9 L16,7Z" fill="rgba(200,200,255,0.7)"/>
-        <Path d="M10,31 L8,29 L16,31Z" fill="rgba(200,200,255,0.7)"/>
+        {/* Main wing top */}
+        <Path d="M24,24 L14,9 L20,9 L30,22Z" fill="url(#wing)" stroke="#8899cc" strokeWidth="0.5" />
+        {/* Main wing bottom */}
+        <Path d="M24,26 L14,41 L20,41 L30,28Z" fill="#c0cff0" stroke="#8899cc" strokeWidth="0.5" />
 
-        {/* Engine pods under wings */}
-        <Ellipse cx="19" cy="15" rx="4" ry="1.8" fill="rgba(180,180,220,0.85)"/>
-        <Ellipse cx="19" cy="23" rx="4" ry="1.8" fill="rgba(180,180,220,0.85)"/>
+        {/* Engines */}
+        <Ellipse cx="25" cy="20" rx="5" ry="2.2" fill="#a0b0e0" />
+        <Ellipse cx="25" cy="30" rx="5" ry="2.2" fill="#a0b0e0" />
 
-        {/* Tail fin — vertical */}
-        <Path d="M5,18.5 L6,13 L10,14 L10,18.5Z" fill="white"/>
-        {/* Tail fins — horizontal */}
-        <Path d="M7,18.5 L4,14 L8,14.5 L9,18.5Z" fill="white"/>
-        <Path d="M7,19.5 L4,24 L8,23.5 L9,19.5Z" fill="rgba(220,220,255,0.85)"/>
+        {/* Tail vertical */}
+        <Path d="M8,24.5 L9,17 L14,18.5 L14,24.5Z" fill="white" stroke="#8899cc" strokeWidth="0.5" />
+        {/* Tail horizontal */}
+        <Path d="M9,24.5 L5,18 L11,19 L12,24.5Z" fill="white" />
+        <Path d="M9,25.5 L5,32 L11,31 L12,25.5Z" fill="#c0cff0" />
 
-        {/* Window row */}
-        <Path d="M22,18 Q28,17.8 34,18 Q34,18.5 28,18.7 Q22,18.5 22,18Z"
-          fill="rgba(150,200,255,0.4)" />
+        {/* Windows */}
+        <Path d="M30,23.5 Q40,23 48,23.5 Q48,24.2 40,24.5 Q30,24.2 30,23.5Z"
+          fill="rgba(100,180,255,0.6)" />
       </Svg>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  wrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  trails: {
-    width: TRAIL_WIDTH,
-    justifyContent: 'center',
-    gap: 6,
-  },
-  trail1: {
-    width: TRAIL_WIDTH,
-    height: 2.5,
-    borderRadius: 2,
-  },
-  trail2: {
-    width: TRAIL_WIDTH,
-    height: 1.5,
-    borderRadius: 2,
-  },
+  wrapper: { flexDirection: 'row', alignItems: 'center' },
+  trails: { width: TRAIL_WIDTH, justifyContent: 'center', gap: 7 },
+  trail1: { width: TRAIL_WIDTH, height: 3, borderRadius: 2 },
+  trail2: { width: TRAIL_WIDTH, height: 2, borderRadius: 2 },
 })

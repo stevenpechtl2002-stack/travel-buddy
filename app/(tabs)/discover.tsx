@@ -27,19 +27,19 @@ export default function DiscoverScreen() {
   const router = useRouter()
   const cardRef = useRef<SwipeCardRef>(null)
   const camelX = useRef(new Animated.Value(-150)).current
-  const planeX = useRef(new Animated.Value(-60)).current
+  const planeX = useRef(new Animated.Value(-200)).current
 
   useEffect(() => {
     const fly = Animated.loop(
       Animated.sequence([
         Animated.timing(planeX, {
-          toValue: SCREEN_WIDTH + 60,
-          duration: 8000,
+          toValue: SCREEN_WIDTH + 200,
+          duration: 6000,
           easing: Easing.linear,
           useNativeDriver: true,
         }),
         Animated.timing(planeX, {
-          toValue: -60,
+          toValue: -200,
           duration: 0,
           useNativeDriver: true,
         }),
@@ -247,9 +247,9 @@ export default function DiscoverScreen() {
     </View>
     </SceneBackground>
 
-    {/* Airplane outside SceneBackground so it's always on top */}
+    {/* Airplane — ganz vorne */}
     <Animated.View style={[styles.plane, { transform: [{ translateX: planeX }] }]} pointerEvents="none">
-      <Text style={{ fontSize: 40 }}>✈️</Text>
+      <FlyingPlane />
     </Animated.View>
 
     {/* Camel outside SceneBackground */}
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
   buttons: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center',
     paddingTop: 16, gap: 40, zIndex: 10 },
   camel: { position: 'absolute', bottom: 92, zIndex: 1 },
-  plane: { position: 'absolute', top: 68, zIndex: 20 },
+  plane: { position: 'absolute', top: 100, zIndex: 999, elevation: 999 },
   nopeBtn: { width: 72, height: 72, borderRadius: 36,
     backgroundColor: 'rgba(255,255,255,0.18)',
     justifyContent: 'center', alignItems: 'center',
