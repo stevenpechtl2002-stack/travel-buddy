@@ -1,6 +1,6 @@
-import { colors, radius, spacing } from '../constants/theme'
+import { colors, gradients, radius, spacing } from '../constants/theme'
 import { Profile, TravelDestination, UserInterest } from '../types'
-import { Dimensions, Image, StyleSheet, Text, View } from 'react-native'
+import { Dimensions, Image, Pressable, StyleSheet, Text, View } from 'react-native'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Animated, {
@@ -12,11 +12,17 @@ import Animated, {
   interpolate,
   Extrapolation,
 } from 'react-native-reanimated'
+import { forwardRef, useImperativeHandle, useState } from 'react'
+import ProfileDetailModal from './ProfileDetailModal'
 
 const { width, height } = Dimensions.get('window')
 const CARD_WIDTH = width - spacing.lg * 2
-const CARD_HEIGHT = height * 0.72
+const CARD_HEIGHT = height * 0.64
 const SWIPE_THRESHOLD = width * 0.3
+
+export interface SwipeCardRef {
+  triggerSwipe: (direction: 'left' | 'right') => void
+}
 
 interface Props {
   profile: Profile
@@ -26,11 +32,24 @@ interface Props {
   onSwipeRight: () => void
 }
 
-export default function SwipeCard({ profile, destinations, interests, onSwipeLeft, onSwipeRight }: Props) {
+const SwipeCard = forwardRef<SwipeCardRef, Props>(function SwipeCard(
+  { profile, destinations, interests, onSwipeLeft, onSwipeRight },
+  ref
+) {
   const topInterests = interests.slice(0, 4).map(i => i.interest)
-
   const translateX = useSharedValue(0)
   const translateY = useSharedValue(0)
+  const [detailVisible, setDetailVisible] = useState(false)
+
+  useImperativeHandle(ref, () => ({
+    triggerSwipe(direction: 'left' | 'right') {
+      const targetX = direction === 'right' ? width * 1.5 : -width * 1.5
+      translateX.value = withTiming(targetX, { duration: 350 }, () => {
+        runOnJS(direction === 'right' ? onSwipeRight : onSwipeLeft)()
+      })
+      translateY.value = withTiming(-30, { duration: 350 })
+    },
+  }))
 
   const gesture = Gesture.Pan()
     .onUpdate((e) => {
@@ -84,23 +103,38 @@ export default function SwipeCard({ profile, destinations, interests, onSwipeLef
         {profile.profile_image_url ? (
           <Image source={{ uri: profile.profile_image_url }} style={styles.photo} resizeMode="cover" />
         ) : (
-          <LinearGradient colors={[colors.primary, colors.primaryLight]} style={styles.photo}>
+          <LinearGradient colors={gradients.brand} style={styles.photo}>
             <Text style={styles.avatarEmoji}>👤</Text>
           </LinearGradient>
         )}
 
-        {/* LIKE label */}
         <Animated.View style={[styles.likeLabel, likeOpacity]}>
           <Text style={styles.likeLabelText}>LIKE ♥</Text>
         </Animated.View>
 
-        {/* NOPE label */}
         <Animated.View style={[styles.nopeLabel, nopeOpacity]}>
           <Text style={styles.nopeLabelText}>NOPE ✕</Text>
         </Animated.View>
 
+        {/* Info button top right */}
+        <Pressable style={styles.infoBtn} onPress={() => setDetailVisible(true)}>
+          <LinearGradient colors={['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.4)']} style={styles.infoBtnGrad}>
+            <Text style={styles.infoBtnText}>ⓘ</Text>
+          </LinearGradient>
+        </Pressable>
+
+        <ProfileDetailModal
+          visible={detailVisible}
+          profile={profile}
+          destinations={destinations}
+          interests={interests}
+          onClose={() => setDetailVisible(false)}
+          onSwipeLeft={() => { setDetailVisible(false); onSwipeLeft() }}
+          onSwipeRight={() => { setDetailVisible(false); onSwipeRight() }}
+        />
+
         <LinearGradient
-          colors={['transparent', 'rgba(0,0,0,0.75)']}
+          colors={['transparent', 'rgba(0,0,0,0.85)']}
           style={styles.overlay}
         >
           <Text style={styles.name}>{profile.name}, {profile.age}</Text>
@@ -130,7 +164,9 @@ export default function SwipeCard({ profile, destinations, interests, onSwipeLef
       </Animated.View>
     </GestureDetector>
   )
-}
+})
+
+export default SwipeCard
 
 const styles = StyleSheet.create({
   card: {
@@ -153,62 +189,34 @@ const styles = StyleSheet.create({
   avatarEmoji: { fontSize: 80 },
   overlay: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+    bottom: 0, left: 0, right: 0,
     padding: spacing.lg,
     paddingTop: spacing.xl * 2,
   },
   likeLabel: {
-    position: 'absolute',
-    top: 40,
-    left: 20,
-    borderWidth: 4,
-    borderColor: '#4CAF50',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    position: 'absolute', top: 40, left: 20,
+    borderWidth: 4, borderColor: '#4CAF50', borderRadius: 8,
+    paddingHorizontal: 12, paddingVertical: 6,
     transform: [{ rotate: '-20deg' }],
   },
-  likeLabelText: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: '#4CAF50',
-    letterSpacing: 2,
-  },
+  likeLabelText: { fontSize: 28, fontWeight: '900', color: '#4CAF50', letterSpacing: 2 },
   nopeLabel: {
-    position: 'absolute',
-    top: 40,
-    right: 20,
-    borderWidth: 4,
-    borderColor: '#F44336',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    position: 'absolute', top: 40, right: 20,
+    borderWidth: 4, borderColor: '#F44336', borderRadius: 8,
+    paddingHorizontal: 12, paddingVertical: 6,
     transform: [{ rotate: '20deg' }],
   },
-  nopeLabelText: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: '#F44336',
-    letterSpacing: 2,
-  },
+  nopeLabelText: { fontSize: 28, fontWeight: '900', color: '#F44336', letterSpacing: 2 },
   name: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: spacing.sm },
   destinations: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: spacing.sm },
-  destChip: {
-    backgroundColor: 'rgba(247,151,30,0.85)',
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
+  destChip: { backgroundColor: 'rgba(255,140,0,0.85)', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
   destText: { color: '#fff', fontSize: 13, fontWeight: '600' },
   interests: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: spacing.sm },
-  interestChip: {
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
+  interestChip: { backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
   interestText: { color: '#fff', fontSize: 12 },
   bio: { fontSize: 14, color: 'rgba(255,255,255,0.85)', fontStyle: 'italic' },
+  infoBtn: { position: 'absolute', top: 14, right: 14, borderRadius: 20, overflow: 'hidden' },
+  infoBtnGrad: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
+  infoBtnText: { color: '#fff', fontSize: 18, fontWeight: '700' },
 })

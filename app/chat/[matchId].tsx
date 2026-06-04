@@ -1,4 +1,5 @@
 import ChatBubble from '@/src/components/ChatBubble'
+import SceneBackground from '@/src/components/SceneBackground'
 import { colors, spacing } from '@/src/constants/theme'
 import { useAuth } from '@/src/hooks/useAuth'
 import { useChat } from '@/src/hooks/useChat'
@@ -32,6 +33,7 @@ export default function ChatScreen() {
   }
 
   return (
+    <SceneBackground>
     <KeyboardAvoidingView style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <View style={styles.topBar}>
@@ -39,7 +41,9 @@ export default function ChatScreen() {
           <Text style={styles.back}>‹ Zurück</Text>
         </Pressable>
         <Text style={styles.title}>{partnerName}</Text>
-        <View style={{ width: 60 }} />
+        <Pressable onPress={() => router.push({ pathname: '/group/create', params: { preselectedMatchId: match?.other_user.id ?? '' } })} accessibilityRole="button">
+          <Text style={styles.groupBtn}>👥</Text>
+        </Pressable>
       </View>
       {error && (
         <View style={styles.errorBanner}>
@@ -64,24 +68,29 @@ export default function ChatScreen() {
         </Pressable>
       </View>
     </KeyboardAvoidingView>
+    </SceneBackground>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1, backgroundColor: 'transparent' },
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    padding: spacing.md, borderBottomWidth: 1, borderColor: colors.border,
-    paddingTop: spacing.xl },
-  back: { fontSize: 18, color: colors.primary, width: 60 },
-  title: { fontSize: 18, fontWeight: 'bold', color: colors.text },
+    padding: spacing.md, borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.25)',
+    paddingTop: spacing.xl, backgroundColor: 'rgba(26,111,212,0.5)' },
+  back: { fontSize: 18, color: '#fff', width: 60 },
+  title: { fontSize: 18, fontWeight: 'bold', color: '#fff',
+    textShadowColor: 'rgba(0,0,0,0.3)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 },
   messageList: { padding: spacing.md, paddingBottom: spacing.xl },
   errorBanner: { backgroundColor: '#ffe0e0', padding: spacing.sm },
   errorText: { color: colors.error, fontSize: 13, textAlign: 'center' },
   inputRow: { flexDirection: 'row', padding: spacing.md, gap: spacing.sm,
-    borderTopWidth: 1, borderColor: colors.border },
-  input: { flex: 1, backgroundColor: colors.surface, borderRadius: 24,
-    paddingHorizontal: spacing.md, paddingVertical: spacing.sm, fontSize: 15 },
+    borderTopWidth: 1, borderColor: 'rgba(255,255,255,0.25)',
+    backgroundColor: 'rgba(26,111,212,0.4)' },
+  input: { flex: 1, backgroundColor: 'rgba(255,255,255,0.25)', borderRadius: 24,
+    paddingHorizontal: spacing.md, paddingVertical: spacing.sm, fontSize: 15,
+    color: '#fff', borderWidth: 1, borderColor: 'rgba(255,255,255,0.35)' },
   sendBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.primary,
     justifyContent: 'center', alignItems: 'center' },
   sendIcon: { color: '#fff', fontSize: 16 },
+  groupBtn: { fontSize: 22, width: 44, textAlign: 'right' },
 })

@@ -46,3 +46,46 @@ export interface Message {
   content: string
   created_at: string
 }
+
+export type GroupRole = 'admin' | 'moderator' | 'member'
+export type GroupMemberStatus = 'invited' | 'active'
+
+export interface Group {
+  id: string
+  name: string
+  description: string | null
+  destination: string | null
+  date_from: string | null
+  date_to: string | null
+  is_public: boolean
+  created_by: string
+  created_at: string
+}
+
+export interface GroupMember {
+  id: string
+  group_id: string
+  user_id: string
+  role: GroupRole
+  status: GroupMemberStatus
+  joined_at: string | null
+  created_at: string
+}
+
+export interface GroupMessage {
+  id: string
+  group_id: string
+  sender_id: string
+  content: string
+  created_at: string
+}
+
+export interface GroupActivity {
+  id: string
+  group_id: string
+  title: string
+  date: string | null
+  location: string | null
+  created_by: string
+  created_at: string
+}

@@ -25,5 +25,11 @@ export function useAuth() {
 
   const signOut = () => supabase.auth.signOut()
 
-  return { session, loading, signIn, signUp, signOut }
+  const sendPhoneOtp = (phone: string) =>
+    supabase.auth.signInWithOtp({ phone })
+
+  const verifyPhoneOtp = (phone: string, token: string) =>
+    supabase.auth.verifyOtp({ phone, token, type: 'sms' })
+
+  return { session, loading, signIn, signUp, signOut, sendPhoneOtp, verifyPhoneOtp }
 }
