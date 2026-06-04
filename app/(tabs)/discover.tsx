@@ -3,6 +3,7 @@ import SwipeCard, { SwipeCardRef } from '@/src/components/SwipeCard'
 import WalkingCamel from '@/src/components/WalkingCamel'
 import FlyingPlane from '@/src/components/FlyingPlane'
 import FilterModal, { Filters, DEFAULT_FILTERS } from '@/src/components/FilterModal'
+import SceneBackground from '@/src/components/SceneBackground'
 import { colors, gradients, spacing } from '@/src/constants/theme'
 import { useAuth } from '@/src/hooks/useAuth'
 import { useDiscover } from '@/src/hooks/useDiscover'
@@ -170,18 +171,8 @@ export default function DiscoverScreen() {
   const top = filteredCandidates[0]
 
   return (
+    <SceneBackground>
     <View style={styles.container}>
-      {/* Sky background */}
-      <LinearGradient
-        colors={['#3b9de0', '#6ab8e8', '#a0d4f5', '#cce8f8', '#e8f6ff']}
-        locations={[0, 0.2, 0.45, 0.7, 1]}
-        style={StyleSheet.absoluteFill}
-      />
-      {/* Clouds */}
-      <View style={styles.cloud1}><Text style={styles.cloudText}>☁️</Text></View>
-      <View style={styles.cloud2}><Text style={styles.cloudText}>☁️</Text></View>
-      <View style={styles.cloud3}><Text style={[styles.cloudText, { fontSize: 28 }]}>☁️</Text></View>
-      <View style={styles.cloud4}><Text style={[styles.cloudText, { fontSize: 22, opacity: 0.5 }]}>☁️</Text></View>
 
       {/* Header */}
       <View style={styles.header}>
@@ -257,12 +248,13 @@ export default function DiscoverScreen() {
         onClose={() => setFilterVisible(false)}
       />
     </View>
+    </SceneBackground>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  loadingContainer: { flex: 1, backgroundColor: '#3b9de0', justifyContent: 'center', alignItems: 'center', gap: 16 },
+  container: { flex: 1, backgroundColor: 'transparent' },
+  loadingContainer: { flex: 1, backgroundColor: 'transparent', justifyContent: 'center', alignItems: 'center', gap: 16 },
   loadingIcon: { width: 64, height: 64, borderRadius: 32, justifyContent: 'center', alignItems: 'center' },
   loadingText: { color: colors.textMuted, fontSize: 15 },
   center: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: spacing.xl },
@@ -280,11 +272,6 @@ const styles = StyleSheet.create({
   logo: { fontSize: 18, fontWeight: '900', color: '#fff',
     textShadowColor: 'rgba(0,0,0,0.2)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 },
   subtitle: { fontSize: 11, color: 'rgba(255,255,255,0.8)' },
-  cloud1: { position: 'absolute', top: 90, left: 10 },
-  cloud2: { position: 'absolute', top: 110, right: 20 },
-  cloud3: { position: 'absolute', top: 75, left: '35%' },
-  cloud4: { position: 'absolute', top: 130, left: '60%' },
-  cloudText: { fontSize: 40, opacity: 0.75 },
   filterBtn: { width: 36, height: 36, borderRadius: 18,
     backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)' },
