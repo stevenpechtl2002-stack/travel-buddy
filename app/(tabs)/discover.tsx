@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
   buttons: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center',
     paddingTop: 16, gap: 40, zIndex: 10 },
   camel: { position: 'absolute', bottom: 92, zIndex: 1 },
-  plane: { position: 'absolute', top: 68, zIndex: 2 },
+  plane: { position: 'absolute', top: 68, zIndex: 20 },
   nopeBtn: { width: 72, height: 72, borderRadius: 36,
     backgroundColor: 'rgba(255,255,255,0.18)',
     justifyContent: 'center', alignItems: 'center',
