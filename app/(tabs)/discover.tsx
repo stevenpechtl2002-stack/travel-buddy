@@ -123,49 +123,55 @@ export default function DiscoverScreen() {
   }
 
   if (loading) return (
-    <View style={styles.loadingContainer}>
-      <LinearGradient colors={gradients.brand} style={styles.loadingIcon}>
-        <Text style={{ fontSize: 28 }}>✈</Text>
-      </LinearGradient>
-      <Text style={styles.loadingText}>Reisende in deiner Nähe…</Text>
-    </View>
+    <SceneBackground>
+      <View style={styles.loadingContainer}>
+        <LinearGradient colors={gradients.brand} style={styles.loadingIcon}>
+          <Text style={{ fontSize: 28 }}>✈</Text>
+        </LinearGradient>
+        <Text style={styles.loadingText}>Reisende in deiner Nähe…</Text>
+      </View>
+    </SceneBackground>
   )
 
   if (error) return (
-    <View style={styles.center}>
-      <Text style={styles.emptyEmoji}>❌</Text>
-      <Text style={styles.emptyText}>Fehler beim Laden</Text>
-      <Pressable style={styles.reloadButton} onPress={reload}>
-        <LinearGradient colors={gradients.brandH} style={styles.reloadGrad}>
-          <Text style={styles.reloadText}>Erneut versuchen</Text>
-        </LinearGradient>
-      </Pressable>
-    </View>
+    <SceneBackground>
+      <View style={styles.center}>
+        <Text style={styles.emptyEmoji}>❌</Text>
+        <Text style={styles.emptyText}>Fehler beim Laden</Text>
+        <Pressable style={styles.reloadButton} onPress={reload}>
+          <LinearGradient colors={gradients.brandH} style={styles.reloadGrad}>
+            <Text style={styles.reloadText}>Erneut versuchen</Text>
+          </LinearGradient>
+        </Pressable>
+      </View>
+    </SceneBackground>
   )
 
   if (filteredCandidates.length === 0) return (
-    <View style={styles.center}>
-      <Text style={styles.emptyEmoji}>🌍</Text>
-      <Text style={styles.emptyText}>
-        {candidates.length > 0 ? 'Keine Reisenden mit diesen Filtern' : 'Keine neuen Reisenden gerade'}
-      </Text>
-      <Text style={styles.emptySub}>
-        {candidates.length > 0 ? 'Ändere deine Filtereinstellungen' : 'Schau später nochmal vorbei'}
-      </Text>
-      {candidates.length > 0 ? (
-        <Pressable style={styles.reloadButton} onPress={() => setFilterVisible(true)}>
-          <LinearGradient colors={gradients.brandH} style={styles.reloadGrad}>
-            <Text style={styles.reloadText}>Filter anpassen</Text>
-          </LinearGradient>
-        </Pressable>
-      ) : (
-        <Pressable style={styles.reloadButton} onPress={reload}>
-          <LinearGradient colors={gradients.brandH} style={styles.reloadGrad}>
-            <Text style={styles.reloadText}>Aktualisieren</Text>
-          </LinearGradient>
-        </Pressable>
-      )}
-    </View>
+    <SceneBackground>
+      <View style={styles.center}>
+        <Text style={styles.emptyEmoji}>🌍</Text>
+        <Text style={styles.emptyText}>
+          {candidates.length > 0 ? 'Keine Reisenden mit diesen Filtern' : 'Keine neuen Reisenden gerade'}
+        </Text>
+        <Text style={styles.emptySub}>
+          {candidates.length > 0 ? 'Ändere deine Filtereinstellungen' : 'Schau später nochmal vorbei'}
+        </Text>
+        {candidates.length > 0 ? (
+          <Pressable style={styles.reloadButton} onPress={() => setFilterVisible(true)}>
+            <LinearGradient colors={gradients.brandH} style={styles.reloadGrad}>
+              <Text style={styles.reloadText}>Filter anpassen</Text>
+            </LinearGradient>
+          </Pressable>
+        ) : (
+          <Pressable style={styles.reloadButton} onPress={reload}>
+            <LinearGradient colors={gradients.brandH} style={styles.reloadGrad}>
+              <Text style={styles.reloadText}>Aktualisieren</Text>
+            </LinearGradient>
+          </Pressable>
+        )}
+      </View>
+    </SceneBackground>
   )
 
   const top = filteredCandidates[0]
