@@ -1,7 +1,3 @@
--- ============================================================
--- ALLES IN EINEM — einmal in Supabase SQL Editor ausführen
--- ============================================================
-
 -- SCHRITT 1: GRUPPEN TABELLEN
 -- ============================================================
 create table if not exists groups (
