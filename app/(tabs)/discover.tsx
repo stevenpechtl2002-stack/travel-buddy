@@ -177,6 +177,7 @@ export default function DiscoverScreen() {
   const top = filteredCandidates[0]
 
   return (
+    <View style={{flex:1}}>
     <SceneBackground>
     <View style={styles.container}>
 
@@ -230,16 +231,6 @@ export default function DiscoverScreen() {
         </View>
       </View>
 
-      {/* Airplane flying at top */}
-      <Animated.View style={[styles.plane, { transform: [{ translateX: planeX }] }]} pointerEvents="none">
-        <FlyingPlane />
-      </Animated.View>
-
-      {/* Animated camel — walks above the dunes */}
-      <Animated.View style={[styles.camel, { transform: [{ translateX: camelX }] }]} pointerEvents="none">
-        <WalkingCamel size={110} />
-      </Animated.View>
-
       <MatchPopup
         visible={!!matchInfo}
         matchName={matchInfo?.name ?? ''}
@@ -255,6 +246,18 @@ export default function DiscoverScreen() {
       />
     </View>
     </SceneBackground>
+
+    {/* Airplane outside SceneBackground so it's always on top */}
+    <Animated.View style={[styles.plane, { transform: [{ translateX: planeX }] }]} pointerEvents="none">
+      <FlyingPlane />
+    </Animated.View>
+
+    {/* Camel outside SceneBackground */}
+    <Animated.View style={[styles.camel, { transform: [{ translateX: camelX }] }]} pointerEvents="none">
+      <WalkingCamel size={110} />
+    </Animated.View>
+
+    </View>
   )
 }
 
