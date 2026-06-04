@@ -249,7 +249,7 @@ export default function DiscoverScreen() {
 
     {/* Airplane outside SceneBackground so it's always on top */}
     <Animated.View style={[styles.plane, { transform: [{ translateX: planeX }] }]} pointerEvents="none">
-      <FlyingPlane />
+      <Text style={{ fontSize: 40 }}>✈️</Text>
     </Animated.View>
 
     {/* Camel outside SceneBackground */}
