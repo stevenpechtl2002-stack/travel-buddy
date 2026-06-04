@@ -247,10 +247,10 @@ export default function DiscoverScreen() {
     </View>
     </SceneBackground>
 
-    {/* Airplane — ganz vorne */}
-    <Animated.View style={[styles.plane, { transform: [{ translateX: planeX }] }]} pointerEvents="none">
-      <FlyingPlane />
-    </Animated.View>
+    {/* Airplane — ganz vorne, fest positioniert zum Testen */}
+    <View style={styles.plane} pointerEvents="none">
+      <Text style={{ fontSize: 60 }}>✈️</Text>
+    </View>
 
     {/* Camel outside SceneBackground */}
     <Animated.View style={[styles.camel, { transform: [{ translateX: camelX }] }]} pointerEvents="none">
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
   buttons: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center',
     paddingTop: 16, gap: 40, zIndex: 10 },
   camel: { position: 'absolute', bottom: 92, zIndex: 1 },
-  plane: { position: 'absolute', top: 100, zIndex: 999, elevation: 999 },
+  plane: { position: 'absolute', top: 200, left: 100, zIndex: 999, elevation: 999 },
   nopeBtn: { width: 72, height: 72, borderRadius: 36,
     backgroundColor: 'rgba(255,255,255,0.18)',
     justifyContent: 'center', alignItems: 'center',
