@@ -1,5 +1,6 @@
 import ChatBubble from '@/src/components/ChatBubble'
 import SceneBackground from '@/src/components/SceneBackground'
+import WheelDatePicker from '@/src/components/WheelDatePicker'
 import { colors, gradients, spacing } from '@/src/constants/theme'
 import { useAuth } from '@/src/hooks/useAuth'
 import { useGroup } from '@/src/hooks/useGroup'
@@ -150,8 +151,10 @@ export default function GroupDetailScreen() {
               {editingPlan ? (
                 <>
                   <TextInput style={styles.planInput} value={editDest} onChangeText={setEditDest} placeholder="Reiseziel" placeholderTextColor="#aaa" />
-                  <TextInput style={styles.planInput} value={editFrom} onChangeText={setEditFrom} placeholder="Von (JJJJ-MM-TT)" placeholderTextColor="#aaa" />
-                  <TextInput style={styles.planInput} value={editTo} onChangeText={setEditTo} placeholder="Bis (JJJJ-MM-TT)" placeholderTextColor="#aaa" />
+                  <Text style={styles.dateLabel}>Von</Text>
+                  <WheelDatePicker value={editFrom || null} onChange={setEditFrom} />
+                  <Text style={[styles.dateLabel, { marginTop: 12 }]}>Bis</Text>
+                  <WheelDatePicker value={editTo || null} onChange={setEditTo} />
                   <View style={styles.planBtnRow}>
                     <Pressable style={styles.saveBtn} onPress={handleSavePlan}><Text style={styles.saveBtnText}>Speichern</Text></Pressable>
                     <Pressable onPress={() => setEditingPlan(false)}><Text style={styles.cancelBtn}>Abbrechen</Text></Pressable>
@@ -256,6 +259,7 @@ const styles = StyleSheet.create({
   editBtn: { fontSize: 13, fontWeight: '700', color: colors.primary },
   planInfo: { fontSize: 14, color: 'rgba(255,255,255,0.85)', marginBottom: 4 },
   planInput: { backgroundColor: 'rgba(255,255,255,0.92)', borderRadius: 12, padding: 12, fontSize: 14, color: '#1a1a2e', marginBottom: 8 },
+  dateLabel: { fontSize: 12, fontWeight: '700', color: 'rgba(255,255,255,0.7)', marginBottom: 2, marginTop: 4 },
   planBtnRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 4 },
   saveBtn: { flex: 1, backgroundColor: colors.primary, borderRadius: 12, padding: 12, alignItems: 'center' },
   saveBtnText: { color: '#fff', fontWeight: '800', fontSize: 14 },
