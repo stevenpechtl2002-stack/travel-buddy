@@ -199,10 +199,12 @@ export default function DiscoverScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        {/* Logo links */}
-        <LinearGradient colors={gradients.brand} style={styles.logoGrad}>
-          <Text style={styles.logoInner}>✈</Text>
-        </LinearGradient>
+        {/* Logo links → öffnet Feed */}
+        <Pressable onPress={() => router.push('/feed')}>
+          <LinearGradient colors={gradients.brand} style={styles.logoGrad}>
+            <Text style={styles.logoInner}>✈</Text>
+          </LinearGradient>
+        </Pressable>
 
         {/* Such-Button Mitte */}
         <Pressable style={styles.searchBtn} onPress={() => setSearchVisible(true)}>
