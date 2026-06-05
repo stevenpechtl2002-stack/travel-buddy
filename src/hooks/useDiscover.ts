@@ -277,22 +277,22 @@ export function useDiscover(userId: string) {
       return
     }
 
-    if (!profiles || profiles.length === 0) {
-      setCandidates(DEMO_CANDIDATES)
-      setLoading(false)
-      return
-    }
+    const enriched: DiscoverProfile[] = profiles
+      ? await Promise.all(
+          profiles.map(async (profile: Profile) => {
+            const [{ data: destinations }, { data: interests }] = await Promise.all([
+              supabase.from('travel_destinations').select('*').eq('user_id', profile.id),
+              supabase.from('user_interests').select('*').eq('user_id', profile.id),
+            ])
+            return { profile, destinations: destinations ?? [], interests: interests ?? [] }
+          })
+        )
+      : []
 
-    const enriched: DiscoverProfile[] = await Promise.all(
-      profiles.map(async (profile: Profile) => {
-        const [{ data: destinations }, { data: interests }] = await Promise.all([
-          supabase.from('travel_destinations').select('*').eq('user_id', profile.id),
-          supabase.from('user_interests').select('*').eq('user_id', profile.id),
-        ])
-        return { profile, destinations: destinations ?? [], interests: interests ?? [] }
-      })
-    )
-    setCandidates(enriched)
+    // Always include demo profiles so there's always someone to swipe on
+    const alreadySwiped = new Set(swipedIds)
+    const filteredDemo = DEMO_CANDIDATES.filter(d => !alreadySwiped.has(d.profile.id))
+    setCandidates([...enriched, ...filteredDemo])
     setLoading(false)
   }, [userId])
 

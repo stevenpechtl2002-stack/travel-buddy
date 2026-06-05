@@ -17,7 +17,7 @@ function Cloud({ top, size, opacity, startX, clock }: {
 }) {
   const style = useAnimatedStyle(() => {
     const offset = (startX + OFFSCREEN) / TOTAL
-    const t = (offset + clock.value / SPEED) % 1
+    const t = 1 - ((offset + clock.value / SPEED) % 1)
     return { transform: [{ translateX: -OFFSCREEN + t * TOTAL }] }
   })
   return (

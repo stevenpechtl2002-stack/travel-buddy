@@ -21,6 +21,23 @@ const DEMO_IMAGES: Record<string, any> = {
   'demo-16': require('../../assets/demo/ben.jpg'),
   'demo-17': require('../../assets/demo/priya.jpg'),
 }
+
+const FALLBACK_IMAGES = [
+  require('../../assets/demo/laura.jpg'),
+  require('../../assets/demo/max.jpg'),
+  require('../../assets/demo/sofia.jpg'),
+  require('../../assets/demo/jonas.jpg'),
+  require('../../assets/demo/mia.jpg'),
+  require('../../assets/demo/luca.jpg'),
+  require('../../assets/demo/emma.jpg'),
+  require('../../assets/demo/noah.jpg'),
+]
+
+function getFallbackImage(id: string) {
+  let hash = 0
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) | 0
+  return FALLBACK_IMAGES[Math.abs(hash) % FALLBACK_IMAGES.length]
+}
 import { LinearGradient } from 'expo-linear-gradient'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Animated, {
@@ -126,9 +143,7 @@ const SwipeCard = forwardRef<SwipeCardRef, Props>(function SwipeCard(
         ) : profile.profile_image_url && !imgError ? (
           <Image source={{ uri: profile.profile_image_url }} style={styles.photo} resizeMode="cover" onError={() => setImgError(true)} />
         ) : (
-          <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={styles.photo}>
-            <Text style={styles.avatarInitial}>{profile.name.charAt(0)}</Text>
-          </LinearGradient>
+          <Image source={getFallbackImage(profile.id)} style={styles.photo} resizeMode="cover" />
         )}
 
         <Animated.View style={[styles.likeLabel, likeOpacity]}>
@@ -209,8 +224,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  avatarEmoji: { fontSize: 80 },
-  avatarInitial: { fontSize: 120, fontWeight: '900', color: 'rgba(255,255,255,0.3)' },
   overlay: {
     position: 'absolute',
     bottom: 0, left: 0, right: 0,
