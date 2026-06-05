@@ -1,8 +1,8 @@
 import { useRef, useEffect } from 'react'
 import { View, Text, ScrollView, StyleSheet, NativeSyntheticEvent, NativeScrollEvent } from 'react-native'
 
-const ITEM_H = 44
-const VISIBLE = 5
+const ITEM_H = 32
+const VISIBLE = 3
 
 interface Props {
   label: string
@@ -105,6 +105,6 @@ const col = StyleSheet.create({
   selector: { position: 'absolute', top: ITEM_H * 2, left: 0, right: 0, height: ITEM_H,
     backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 8, zIndex: 1 },
   item: { height: ITEM_H, justifyContent: 'center', alignItems: 'center' },
-  itemText: { fontSize: 16, color: 'rgba(255,255,255,0.45)', fontWeight: '500' },
-  itemTextActive: { color: '#fff', fontWeight: '800', fontSize: 18 },
+  itemText: { fontSize: 13, color: 'rgba(255,255,255,0.45)', fontWeight: '500' },
+  itemTextActive: { color: '#fff', fontWeight: '800', fontSize: 15 },
 })
