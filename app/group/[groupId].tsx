@@ -185,8 +185,9 @@ export default function GroupDetailScreen() {
             <View style={styles.addActCard}>
               <Text style={styles.sectionLbl}>+ Aktivität vorschlagen</Text>
               <TextInput style={styles.planInput} value={actTitle} onChangeText={setActTitle} placeholder="Titel *" placeholderTextColor="#aaa" />
-              <TextInput style={styles.planInput} value={actDate} onChangeText={setActDate} placeholder="Datum" placeholderTextColor="#aaa" />
-              <TextInput style={styles.planInput} value={actLoc} onChangeText={setActLoc} placeholder="Ort" placeholderTextColor="#aaa" />
+              <Text style={styles.dateLabel}>Datum</Text>
+              <WheelDatePicker value={actDate || null} onChange={setActDate} />
+              <TextInput style={[styles.planInput, { marginTop: 10 }]} value={actLoc} onChangeText={setActLoc} placeholder="Ort" placeholderTextColor="#aaa" />
               <Pressable style={styles.saveBtn} onPress={handleAddActivity}><Text style={styles.saveBtnText}>Hinzufügen</Text></Pressable>
             </View>
           </ScrollView>
