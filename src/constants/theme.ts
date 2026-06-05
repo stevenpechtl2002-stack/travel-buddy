@@ -1,25 +1,28 @@
 export const colors = {
-  primary: '#ff8c00',
-  primaryLight: '#ffcc00',
-  secondary: '#ff4d6d',
-  accent: '#c084fc',
-  accentBlue: '#00c2ff',
-  background: '#0d0d12',
-  surface: '#16181f',
-  surfaceLight: '#1e2130',
-  text: '#ffffff',
-  textMuted: 'rgba(255,255,255,0.5)',
-  border: 'rgba(255,255,255,0.08)',
+  primary: '#e8845c',       // warm coral/terracotta
+  primaryDark: '#c9566e',   // deep rose
+  primaryLight: '#f0b48c',  // soft peach
+  accent: '#f0c070',        // warm gold
+  accentBlue: '#4a9eca',    // muted sky blue
+  background: '#0d1b2e',    // deep midnight
+  surface: '#111d2e',
+  surfaceLight: '#1a2a3e',
+  text: '#f5f0eb',          // warm white
+  textMuted: 'rgba(245,240,235,0.5)',
+  border: 'rgba(245,240,235,0.08)',
   white: '#fff',
-  error: '#ff4757',
+  error: '#e05555',
 }
 
 export const gradients = {
-  brand: ['#ff8c00', '#ff4d6d', '#9b27af'] as const,
-  brandH: ['#ff8c00', '#ff4d6d'] as const,
-  card: ['#ff8c00', '#c084fc'] as const,
-  blue: ['#00c2ff', '#6366f1'] as const,
-  dark: ['#16181f', '#1e2130'] as const,
+  brand: ['#e8845c', '#c9566e'] as const,
+  brandH: ['#e8845c', '#c9566e'] as const,
+  brandGold: ['#f0c070', '#e8845c'] as const,
+  sky: ['#0d1b2e', '#1a3a5c', '#7e4a35', '#c4703a', '#e8a860'] as const,
+  skyLocations: [0, 0.3, 0.55, 0.75, 1] as const,
+  card: ['#e8845c', '#c9566e'] as const,
+  dark: ['#111d2e', '#1a2a3e'] as const,
+  glass: ['rgba(255,255,255,0.08)', 'rgba(255,255,255,0.03)'] as const,
 }
 
 export const spacing = {

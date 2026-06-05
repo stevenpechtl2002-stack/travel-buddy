@@ -239,9 +239,9 @@ export default function DiscoverScreen() {
 
           <Pressable style={[styles.likeBtn, processing && styles.btnDisabled]}
             onPress={() => handleButtonPress('right')} disabled={processing}>
-            <View style={styles.likeBtnGradient}>
+            <LinearGradient colors={gradients.brand} style={styles.likeBtnGradient}>
               <Text style={styles.likeBtnText}>♥</Text>
-            </View>
+            </LinearGradient>
           </Pressable>
         </View>
       </View>
@@ -293,38 +293,35 @@ const styles = StyleSheet.create({
   logoGrad: { width: 38, height: 38, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
   logoInner: { fontSize: 18, color: '#fff' },
   headerCenter: { flex: 1 },
-  logo: { fontSize: 18, fontWeight: '900', color: '#fff',
-    textShadowColor: 'rgba(0,0,0,0.2)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 },
-  subtitle: { fontSize: 11, color: 'rgba(255,255,255,0.8)' },
-  filterBtn: { width: 36, height: 36, borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)' },
-  filterIcon: { fontSize: 17, color: '#fff' },
+  logo: { fontSize: 18, fontWeight: '900', color: colors.text },
+  subtitle: { fontSize: 11, color: colors.textMuted },
+  filterBtn: { width: 36, height: 36, borderRadius: 12,
+    backgroundColor: 'rgba(245,240,235,0.1)', justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1, borderColor: 'rgba(245,240,235,0.18)' },
+  filterIcon: { fontSize: 16, color: colors.text },
   filterBadge: { position: 'absolute', top: -4, right: -4, backgroundColor: colors.primary,
     borderRadius: 8, minWidth: 16, height: 16, justifyContent: 'center', alignItems: 'center',
     zIndex: 1, paddingHorizontal: 3 },
   filterBadgeText: { color: '#fff', fontSize: 9, fontWeight: '900' },
   onlinePill: { flexDirection: 'row', alignItems: 'center', gap: 5,
-    backgroundColor: 'rgba(255,255,255,0.3)', borderRadius: 50,
+    backgroundColor: 'rgba(245,240,235,0.1)', borderRadius: 50,
     paddingHorizontal: 10, paddingVertical: 5,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.5)' },
+    borderWidth: 1, borderColor: 'rgba(245,240,235,0.18)' },
   greenDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#4ade80' },
-  onlineText: { fontSize: 11, fontWeight: '700', color: '#fff' },
+  onlineText: { fontSize: 11, fontWeight: '700', color: colors.text },
   cardWrapper: { flex: 1, paddingHorizontal: spacing.lg, justifyContent: 'flex-start', paddingTop: 4, zIndex: 10 },
   buttons: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center',
     paddingTop: 16, gap: 40, zIndex: 10 },
   camel: { position: 'absolute', bottom: 92, zIndex: 1 },
   plane: { position: 'absolute', top: 95, zIndex: 999, elevation: 999 },
-  nopeBtn: { width: 72, height: 72, borderRadius: 36,
-    backgroundColor: 'rgba(255,255,255,0.18)',
+  nopeBtn: { width: 68, height: 68, borderRadius: 34,
+    backgroundColor: 'rgba(245,240,235,0.1)',
     justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.4)',
-    shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 8, elevation: 4 },
-  nopeBtnText: { fontSize: 24, color: '#ff4757' },
-  likeBtn: { width: 72, height: 72, borderRadius: 36, overflow: 'hidden',
-    backgroundColor: 'rgba(220,60,0,0.78)',
-    borderWidth: 1.5, borderColor: 'rgba(255,120,20,0.9)',
-    shadowColor: '#ff8c00', shadowOpacity: 0.25, shadowRadius: 14, elevation: 8 },
+    borderWidth: 1.5, borderColor: 'rgba(245,240,235,0.22)',
+    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 10, elevation: 4 },
+  nopeBtnText: { fontSize: 24, color: '#e05555' },
+  likeBtn: { width: 68, height: 68, borderRadius: 34, overflow: 'hidden',
+    shadowColor: colors.primary, shadowOpacity: 0.4, shadowRadius: 14, elevation: 8 },
   likeBtnGradient: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   likeBtnText: { fontSize: 26, color: '#fff' },
   btnDisabled: { opacity: 0.4 },

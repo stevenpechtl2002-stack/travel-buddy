@@ -10,12 +10,12 @@ import {
 const { width } = Dimensions.get('window')
 
 const STORIES = [
-  { id: '1', user: 'Lisa M.', avatar: '👩', location: 'Bali, Indonesien', flag: '🇮🇩', time: 'vor 2 Min', emoji: '🌊', text: 'Sonnenuntergang am Tanah Lot 🙏', color: '#ff8c00' },
-  { id: '2', user: 'Marco R.', avatar: '👨', location: 'Bangkok, Thailand', flag: '🇹🇭', time: 'vor 8 Min', emoji: '🍜', text: 'Bestes Pad Thai meines Lebens! 🔥', color: '#00c2ff' },
-  { id: '3', user: 'Sophie K.', avatar: '👩‍🦰', location: 'Tokio, Japan', flag: '🇯🇵', time: 'vor 15 Min', emoji: '🌸', text: 'Kirschblüten im Shinjuku Park 💕', color: '#c084fc' },
+  { id: '1', user: 'Lisa M.', avatar: '👩', location: 'Bali, Indonesien', flag: '🇮🇩', time: 'vor 2 Min', emoji: '🌊', text: 'Sonnenuntergang am Tanah Lot 🙏', color: '#e8845c' },
+  { id: '2', user: 'Marco R.', avatar: '👨', location: 'Bangkok, Thailand', flag: '🇹🇭', time: 'vor 8 Min', emoji: '🍜', text: 'Bestes Pad Thai meines Lebens! 🔥', color: '#4a9eca' },
+  { id: '3', user: 'Sophie K.', avatar: '👩‍🦰', location: 'Tokio, Japan', flag: '🇯🇵', time: 'vor 15 Min', emoji: '🌸', text: 'Kirschblüten im Shinjuku Park 💕', color: '#c9566e' },
   { id: '4', user: 'Tom B.', avatar: '🧑', location: 'Barcelona, Spanien', flag: '🇪🇸', time: 'vor 22 Min', emoji: '⛱', text: 'Barceloneta Beach — perfektes Wetter!', color: '#4ade80' },
-  { id: '5', user: 'Mia L.', avatar: '👱‍♀️', location: 'Santorini, Griechenland', flag: '🇬🇷', time: 'vor 34 Min', emoji: '🏛️', text: 'Die blauen Kuppeln sind unreal 😍', color: '#ff4d6d' },
-  { id: '6', user: 'Leon W.', avatar: '👨‍🦱', location: 'Kapstadt, Südafrika', flag: '🇿🇦', time: 'vor 1 Std', emoji: '🦁', text: 'Safari war das Erlebnis meines Lebens!', color: '#ffcc00' },
+  { id: '5', user: 'Mia L.', avatar: '👱‍♀️', location: 'Santorini, Griechenland', flag: '🇬🇷', time: 'vor 34 Min', emoji: '🏛️', text: 'Die blauen Kuppeln sind unreal 😍', color: '#c9566e' },
+  { id: '6', user: 'Leon W.', avatar: '👨‍🦱', location: 'Kapstadt, Südafrika', flag: '🇿🇦', time: 'vor 1 Std', emoji: '🦁', text: 'Safari war das Erlebnis meines Lebens!', color: '#f0c070' },
 ]
 
 const COUNTRIES = [
@@ -102,11 +102,11 @@ function GlobePage() {
 
         {/* Story pins on globe */}
         <View style={[styles.pin, { top: '22%', left: '52%' }]}>
-          <View style={[styles.pinDot, { backgroundColor: '#ff8c00' }]} />
+          <View style={[styles.pinDot, { backgroundColor: '#e8845c' }]} />
           <Text style={styles.pinLabel}>Bali 🌊</Text>
         </View>
         <View style={[styles.pin, { top: '18%', left: '72%' }]}>
-          <View style={[styles.pinDot, { backgroundColor: '#c084fc' }]} />
+          <View style={[styles.pinDot, { backgroundColor: '#c9566e' }]} />
           <Text style={styles.pinLabel}>Tokio 🌸</Text>
         </View>
         <View style={[styles.pin, { top: '28%', left: '38%' }]}>

@@ -154,10 +154,10 @@ const SwipeCard = forwardRef<SwipeCardRef, Props>(function SwipeCard(
           <Text style={styles.nopeLabelText}>NOPE ✕</Text>
         </Animated.View>
 
-        {/* Info button top right */}
+        {/* Details button */}
         <Pressable style={styles.infoBtn} onPress={() => setDetailVisible(true)}>
-          <LinearGradient colors={['rgba(0,0,0,0.6)', 'rgba(0,0,0,0.4)']} style={styles.infoBtnGrad}>
-            <Text style={styles.infoBtnText}>ⓘ</Text>
+          <LinearGradient colors={['rgba(0,0,0,0.65)', 'rgba(0,0,0,0.45)']} style={styles.infoBtnGrad}>
+            <Text style={styles.infoBtnText}>Details</Text>
           </LinearGradient>
         </Pressable>
 
@@ -246,14 +246,17 @@ const styles = StyleSheet.create({
   nopeLabelText: { fontSize: 28, fontWeight: '900', color: '#F44336', letterSpacing: 2 },
   name: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: spacing.sm },
   destinations: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: spacing.sm },
-  destChip: { backgroundColor: 'rgba(255,140,0,0.85)', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
+  destChip: { backgroundColor: 'rgba(232,132,92,0.85)', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
   destText: { color: '#fff', fontSize: 13, fontWeight: '600' },
   interests: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: spacing.sm },
   interestChip: { backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
   interestText: { color: '#fff', fontSize: 12 },
   bio: { fontSize: 14, color: 'rgba(255,255,255,0.85)', fontStyle: 'italic' },
   infoBtn: { position: 'absolute', top: 14, right: 14, borderRadius: 20, overflow: 'hidden' },
-  infoBtnGrad: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
-  infoBtnText: { color: '#fff', fontSize: 18, fontWeight: '700' },
+  infoBtnGrad: {
+    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
+    justifyContent: 'center', alignItems: 'center',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)',
+  },
+  infoBtnText: { color: '#fff', fontSize: 13, fontWeight: '800', letterSpacing: 0.3 },
 })

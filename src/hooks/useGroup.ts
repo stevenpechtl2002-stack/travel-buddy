@@ -30,7 +30,7 @@ export function useGroup(groupId: string, userId: string) {
     setLoading(false)
   }
 
-  const updatePlan = async (fields: Partial<Pick<Group, 'destination' | 'date_from' | 'date_to' | 'name' | 'description'>>) => {
+  const updatePlan = async (fields: Partial<Pick<Group, 'destination' | 'date_from' | 'date_to' | 'name' | 'description' | 'notes'>>) => {
     await supabase.from('groups').update(fields).eq('id', groupId)
     await loadGroup()
   }

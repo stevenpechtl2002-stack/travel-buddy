@@ -57,6 +57,7 @@ export interface Group {
   destination: string | null
   date_from: string | null
   date_to: string | null
+  notes: string | null
   is_public: boolean
   created_by: string
   created_at: string

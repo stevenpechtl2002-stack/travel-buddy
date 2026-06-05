@@ -1,19 +1,20 @@
 import { LinearGradient } from 'expo-linear-gradient'
-import { StyleSheet, Text, View, Dimensions } from 'react-native'
 import { ReactNode, useEffect } from 'react'
+import { Dimensions, StyleSheet, View } from 'react-native'
 import Animated, {
-  useSharedValue, useAnimatedStyle, withRepeat, withTiming, Easing, SharedValue
+  Easing, SharedValue, useAnimatedStyle, useSharedValue, withRepeat, withTiming,
 } from 'react-native-reanimated'
 
 const W = Dimensions.get('window').width
-const OFFSCREEN = 55          // buffer so cloud fully exits before reappearing
+const OFFSCREEN = 60
 const TOTAL = W + OFFSCREEN * 2
-const SPEED = 45000
+const SPEED = 55000
 
 interface Props { children: ReactNode }
 
-function Cloud({ top, size, opacity, startX, clock }: {
-  top: number; size: number; opacity: number; startX: number; clock: SharedValue<number>
+// Wispy cloud shape via View layers instead of emoji
+function WispyCloud({ top, width, opacity, blur, startX, clock }: {
+  top: number; width: number; opacity: number; blur?: number; startX: number; clock: SharedValue<number>
 }) {
   const style = useAnimatedStyle(() => {
     const offset = (startX + OFFSCREEN) / TOTAL
@@ -21,36 +22,41 @@ function Cloud({ top, size, opacity, startX, clock }: {
     return { transform: [{ translateX: -OFFSCREEN + t * TOTAL }] }
   })
   return (
-    <Animated.View style={[{ position: 'absolute', top }, style]}>
-      <Text style={{ fontSize: size, opacity }}>☁️</Text>
+    <Animated.View style={[{ position: 'absolute', top, opacity }, style]}>
+      {/* Main cloud body */}
+      <View style={{
+        width, height: width * 0.28, borderRadius: width * 0.14,
+        backgroundColor: 'rgba(240,220,200,0.55)',
+      }} />
+      {/* Top puff left */}
+      <View style={{
+        position: 'absolute', width: width * 0.45, height: width * 0.45,
+        borderRadius: width * 0.225, backgroundColor: 'rgba(240,215,195,0.45)',
+        top: -width * 0.22, left: width * 0.1,
+      }} />
+      {/* Top puff right */}
+      <View style={{
+        position: 'absolute', width: width * 0.38, height: width * 0.38,
+        borderRadius: width * 0.19, backgroundColor: 'rgba(240,215,195,0.4)',
+        top: -width * 0.18, left: width * 0.4,
+      }} />
     </Animated.View>
   )
 }
 
-// Clouds: irregular horizontal & vertical positions, no visible pattern
 const CLOUDS = [
-  { top: 60,  size: 50, opacity: 0.80, startX: TOTAL * 0.02 - OFFSCREEN },
-  { top: 78,  size: 28, opacity: 0.52, startX: TOTAL * 0.19 - OFFSCREEN },
-  { top: 55,  size: 44, opacity: 0.72, startX: TOTAL * 0.38 - OFFSCREEN },
-  { top: 88,  size: 34, opacity: 0.58, startX: TOTAL * 0.51 - OFFSCREEN },
-  { top: 64,  size: 48, opacity: 0.76, startX: TOTAL * 0.67 - OFFSCREEN },
-  { top: 74,  size: 30, opacity: 0.54, startX: TOTAL * 0.84 - OFFSCREEN },
+  { top: 55,  width: 110, opacity: 0.55, startX: TOTAL * 0.02 - OFFSCREEN },
+  { top: 72,  width: 68,  opacity: 0.35, startX: TOTAL * 0.21 - OFFSCREEN },
+  { top: 48,  width: 95,  opacity: 0.48, startX: TOTAL * 0.40 - OFFSCREEN },
+  { top: 82,  width: 78,  opacity: 0.38, startX: TOTAL * 0.58 - OFFSCREEN },
+  { top: 60,  width: 105, opacity: 0.50, startX: TOTAL * 0.74 - OFFSCREEN },
+  { top: 75,  width: 62,  opacity: 0.32, startX: TOTAL * 0.88 - OFFSCREEN },
 
-  { top: 105, size: 42, opacity: 0.64, startX: TOTAL * 0.09 - OFFSCREEN },
-  { top: 118, size: 24, opacity: 0.46, startX: TOTAL * 0.28 - OFFSCREEN },
-  { top:  96, size: 46, opacity: 0.68, startX: TOTAL * 0.44 - OFFSCREEN },
-  { top: 112, size: 32, opacity: 0.55, startX: TOTAL * 0.60 - OFFSCREEN },
-  { top: 100, size: 38, opacity: 0.62, startX: TOTAL * 0.78 - OFFSCREEN },
-  { top: 122, size: 26, opacity: 0.48, startX: TOTAL * 0.93 - OFFSCREEN },
-
-  { top: 136, size: 36, opacity: 0.50, startX: TOTAL * 0.14 - OFFSCREEN },
-  { top: 148, size: 22, opacity: 0.38, startX: TOTAL * 0.33 - OFFSCREEN },
-  { top: 128, size: 40, opacity: 0.54, startX: TOTAL * 0.56 - OFFSCREEN },
-  { top: 142, size: 28, opacity: 0.44, startX: TOTAL * 0.72 - OFFSCREEN },
-  { top: 132, size: 20, opacity: 0.35, startX: TOTAL * 0.89 - OFFSCREEN },
-
-  { top: 163, size: 24, opacity: 0.30, startX: TOTAL * 0.22 - OFFSCREEN },
-  { top: 170, size: 30, opacity: 0.34, startX: TOTAL * 0.63 - OFFSCREEN },
+  { top: 108, width: 88,  opacity: 0.38, startX: TOTAL * 0.12 - OFFSCREEN },
+  { top: 120, width: 55,  opacity: 0.28, startX: TOTAL * 0.32 - OFFSCREEN },
+  { top: 100, width: 98,  opacity: 0.42, startX: TOTAL * 0.52 - OFFSCREEN },
+  { top: 115, width: 72,  opacity: 0.33, startX: TOTAL * 0.70 - OFFSCREEN },
+  { top: 105, width: 82,  opacity: 0.36, startX: TOTAL * 0.86 - OFFSCREEN },
 ]
 
 export default function SceneBackground({ children }: Props) {
@@ -59,20 +65,22 @@ export default function SceneBackground({ children }: Props) {
   useEffect(() => {
     clock.value = withRepeat(
       withTiming(SPEED, { duration: SPEED, easing: Easing.linear }),
-      -1,
-      false
+      -1, false
     )
   }, [])
 
   return (
     <View style={styles.root}>
+      {/* Golden-hour sky: deep midnight blue → warm horizon glow */}
       <LinearGradient
-        colors={['#3b9de0', '#6ab8e8', '#a0d4f5', '#cce8f8', '#e8f6ff']}
-        locations={[0, 0.2, 0.45, 0.7, 1]}
+        colors={['#0d1b2e', '#1a3a5c', '#7e4a35', '#c4703a', '#e8a860']}
+        locations={[0, 0.3, 0.55, 0.75, 1]}
         style={StyleSheet.absoluteFill}
       />
+      {/* Subtle star shimmer in the dark upper area */}
+      <View style={styles.stars} />
       {CLOUDS.map((c, i) => (
-        <Cloud key={i} {...c} clock={clock} />
+        <WispyCloud key={i} {...c} clock={clock} />
       ))}
       {children}
     </View>
@@ -81,4 +89,9 @@ export default function SceneBackground({ children }: Props) {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+  stars: {
+    position: 'absolute', top: 0, left: 0, right: 0, height: 120,
+    opacity: 0.3,
+    // stars are painted via the gradient — placeholder for possible future Lottie/SVG
+  },
 })

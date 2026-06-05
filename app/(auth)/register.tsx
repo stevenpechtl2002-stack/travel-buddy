@@ -132,9 +132,10 @@ export default function RegisterScreen() {
 
   return (
     <View style={styles.root}>
-      <LinearGradient colors={['#3b9de0','#6ab8e8','#a0d4f5','#cce8f8','#e8f6ff']} style={StyleSheet.absoluteFill}/>
-      <Text style={[styles.cloud,{top:55,left:18}]}>☁️</Text>
-      <Text style={[styles.cloud,{top:75,right:25,fontSize:26}]}>☁️</Text>
+      <LinearGradient colors={['#0d1b2e','#1a3a5c','#7e4a35','#c4703a','#e8a860']} locations={[0,0.3,0.55,0.75,1]} style={StyleSheet.absoluteFill}/>
+      <View style={[styles.star,{top:52,left:'14%'}]}/>
+      <View style={[styles.star,{top:38,left:'58%',opacity:0.4}]}/>
+      <View style={[styles.star,{top:70,left:'78%',opacity:0.5}]}/>
 
       <KeyboardAvoidingView style={styles.kav} behavior={Platform.OS==='ios'?'padding':'height'}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
@@ -344,6 +345,7 @@ const styles = StyleSheet.create({
   kav: { flex:1 },
   scroll: { flexGrow:1, padding:spacing.lg, paddingTop:60 },
   cloud: { position:'absolute', fontSize:40, opacity:0.7 },
+  star: { position:'absolute', width:3, height:3, borderRadius:1.5, backgroundColor:'#f5f0eb', opacity:0.6 },
   logoRow: { flexDirection:'row', alignItems:'center', justifyContent:'center', gap:10, marginBottom:16 },
   logoIcon: { width:42,height:42,borderRadius:13,justifyContent:'center',alignItems:'center' },
   logoText: { fontSize:24,fontWeight:'900',color:'#fff',

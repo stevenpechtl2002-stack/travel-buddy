@@ -64,7 +64,7 @@ function PublicCard({ item, onJoin, delay }: { item: Group; onJoin: () => void; 
   return (
     <Animated.View style={{ opacity: anim, transform: [{ translateY: anim.interpolate({ inputRange: [0,1], outputRange: [24,0] }) }] }}>
       <View style={styles.groupCard}>
-        <LinearGradient colors={['#ff8c00','#ff4500']} style={styles.groupEmoji}>
+        <LinearGradient colors={['#e8845c','#c9566e']} style={styles.groupEmoji}>
           <Text style={{ fontSize: 24 }}>{groupEmoji(item.id)}</Text>
         </LinearGradient>
         <View style={{ flex: 1 }}>
@@ -133,7 +133,7 @@ export default function GroupsScreen() {
                 {invitations.map(inv => (
                   <View key={inv.id} style={styles.inviteCard}>
                     <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-                      <LinearGradient colors={['#ff8c00','#ff4500']} style={styles.inviteIcon}>
+                      <LinearGradient colors={['#e8845c','#c9566e']} style={styles.inviteIcon}>
                         <Text style={{ fontSize: 20 }}>{groupEmoji(inv.id)}</Text>
                       </LinearGradient>
                       <View style={{ flex: 1 }}>

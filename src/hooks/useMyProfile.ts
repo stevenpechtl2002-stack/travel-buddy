@@ -1,11 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import * as FileSystem from 'expo-file-system'
-import { decode } from 'base64-arraybuffer'
+import * as FileSystem from 'expo-file-system/legacy'
 import { supabase } from '../lib/supabase'
 import { ProfileData } from '../components/ProfileEditModal'
 import { useEffect, useState, useCallback } from 'react'
 
 const STORAGE_KEY = 'travel_buddy_my_profile'
+const BUCKET = 'profile-images'
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? ''
 
 const EMPTY_PROFILE: ProfileData = {
   name: 'Dein Profil',
@@ -21,17 +22,33 @@ const EMPTY_PROFILE: ProfileData = {
   images: [],
 }
 
-async function uploadImageToSupabase(userId: string, localUri: string): Promise<string> {
-  const filename = `${userId}/${Date.now()}.jpg`
-  const base64 = await FileSystem.readAsStringAsync(localUri, {
-    encoding: FileSystem.EncodingType.Base64,
+async function uploadImage(userId: string, localUri: string): Promise<string> {
+  const ext = localUri.split('?')[0].split('.').pop()?.toLowerCase() ?? 'jpg'
+  const mime = ext === 'png' ? 'image/png' : 'image/jpeg'
+  const filename = `${userId}/${Date.now()}.${ext}`
+
+  // Get auth token for the request header
+  const { data: { session } } = await supabase.auth.getSession()
+  const token = session?.access_token
+  if (!token) throw new Error('Nicht eingeloggt')
+
+  // Use FileSystem.uploadAsync — the only reliable binary upload in React Native
+  const uploadUrl = `${SUPABASE_URL}/storage/v1/object/${BUCKET}/${filename}`
+  const result = await FileSystem.uploadAsync(uploadUrl, localUri, {
+    httpMethod: 'POST',
+    uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': mime,
+      'x-upsert': 'true',
+    },
   })
-  const arrayBuffer = decode(base64)
-  const { error } = await supabase.storage
-    .from('app1')
-    .upload(filename, arrayBuffer, { contentType: 'image/jpeg', upsert: true })
-  if (error) throw error
-  const { data } = supabase.storage.from('app1').getPublicUrl(filename)
+
+  if (result.status < 200 || result.status >= 300) {
+    throw new Error(`Upload fehlgeschlagen (${result.status}): ${result.body}`)
+  }
+
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(filename)
   return data.publicUrl
 }
 
@@ -39,17 +56,14 @@ export function useMyProfile(userId: string) {
   const [profile, setProfileState] = useState<ProfileData>(EMPTY_PROFILE)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
-  // Load on mount
-  useEffect(() => {
-    load()
-  }, [userId])
+  useEffect(() => { load() }, [userId])
 
   const load = useCallback(async () => {
     setLoading(true)
     try {
       if (userId) {
-        // Load from Supabase
         const [{ data: p }, { data: dests }, { data: ints }] = await Promise.all([
           supabase.from('profiles').select('*').eq('id', userId).single(),
           supabase.from('travel_destinations').select('*').eq('user_id', userId),
@@ -61,21 +75,17 @@ export function useMyProfile(userId: string) {
             tagline: (p as any).tagline ?? EMPTY_PROFILE.tagline,
             bio: p.bio ?? EMPTY_PROFILE.bio,
             travelStyle: p.travel_style ?? EMPTY_PROFILE.travelStyle,
-            destinations: (dests ?? []).map((d: any) => ({
-              flag: d.flag ?? '🌍',
-              name: d.city ?? d.country,
-            })),
+            destinations: (dests ?? []).map((d: any) => ({ flag: d.flag ?? '🌍', name: d.city ?? d.country })),
             interests: (ints ?? []).map((i: any) => i.interest),
             images: (p as any).photo_urls ?? (p.profile_image_url ? [p.profile_image_url] : []),
           })
           return
         }
       }
-      // Fallback: AsyncStorage
       const raw = await AsyncStorage.getItem(STORAGE_KEY)
       if (raw) setProfileState(JSON.parse(raw))
     } catch {
-      // ignore, use default
+      // use default
     } finally {
       setLoading(false)
     }
@@ -83,32 +93,38 @@ export function useMyProfile(userId: string) {
 
   const save = useCallback(async (data: ProfileData) => {
     setSaving(true)
+    setUploadError(null)
+
+    // Show images immediately (local URIs are fine for display)
     setProfileState(data)
+
     try {
+      let finalImages = [...data.images]
+      const uploadErrors: string[] = []
+
       if (userId) {
-        // Upload any local images (file:// URIs)
-        const finalImages: string[] = []
-        for (const uri of data.images) {
+        // Upload any local file:// URIs to Supabase Storage
+        for (let i = 0; i < finalImages.length; i++) {
+          const uri = finalImages[i]
           if (uri.startsWith('file://') || uri.startsWith('content://')) {
             try {
-              const url = await uploadImageToSupabase(userId, uri)
-              finalImages.push(url)
-            } catch (e) {
-              console.warn('Image upload failed:', e)
-              // Don't push local URI — skip failed uploads
+              const remoteUrl = await uploadImage(userId, uri)
+              finalImages[i] = remoteUrl   // replace local with remote in-place
+            } catch (e: any) {
+              uploadErrors.push(e.message ?? 'Upload fehlgeschlagen')
+              // Keep local URI so the image stays visible in this session
+              // (will be gone after app restart, but user is informed)
             }
-          } else {
-            finalImages.push(uri)
           }
         }
-        const updatedData = { ...data, images: finalImages }
-        setProfileState(updatedData)
 
-        // Only save https URLs to DB — never local file:// URIs
+        // Update state with final mix (remote URLs + remaining local URIs)
+        setProfileState({ ...data, images: finalImages })
+
+        // Only persist HTTPS URLs to Supabase DB
         const remoteImages = finalImages.filter(u => u.startsWith('http'))
 
-        // Upsert profile row (creates if not exists, updates if exists)
-        await supabase.from('profiles').upsert({
+        const { error: upsertError } = await supabase.from('profiles').upsert({
           id: userId,
           name: data.name,
           bio: data.bio,
@@ -118,16 +134,13 @@ export function useMyProfile(userId: string) {
           tagline: data.tagline,
         } as any, { onConflict: 'id' })
 
+        if (upsertError) console.warn('Profile upsert error:', upsertError.message)
+
         // Save destinations
         await supabase.from('travel_destinations').delete().eq('user_id', userId)
         if (data.destinations.length > 0) {
           await supabase.from('travel_destinations').insert(
-            data.destinations.map(d => ({
-              user_id: userId,
-              country: d.name,
-              city: null,
-              flag: d.flag,
-            }))
+            data.destinations.map(d => ({ user_id: userId, country: d.name, city: null, flag: d.flag }))
           )
         }
 
@@ -139,20 +152,29 @@ export function useMyProfile(userId: string) {
           )
         }
 
-        // Also persist locally as backup
-        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedData))
+        // Persist locally (with local URIs as fallback for offline)
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ ...data, images: finalImages }))
+
+        if (uploadErrors.length > 0) {
+          const msg = uploadErrors[0]
+          setUploadError(
+            msg.includes('not found') || msg.includes('bucket')
+              ? 'Storage-Bucket fehlt. Bitte "profile-images" Bucket in Supabase erstellen.'
+              : `Foto-Upload fehlgeschlagen: ${msg}`
+          )
+        }
       } else {
-        // Demo mode: AsyncStorage only
+        // No user session — store locally only
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data))
       }
-    } catch (e) {
+    } catch (e: any) {
       console.warn('Profile save error:', e)
-      // Always save locally as fallback
+      setUploadError(e.message ?? 'Speichern fehlgeschlagen')
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data)).catch(() => {})
     } finally {
       setSaving(false)
     }
   }, [userId])
 
-  return { profile, loading, saving, save, reload: load }
+  return { profile, loading, saving, uploadError, clearUploadError: () => setUploadError(null), save, reload: load }
 }

@@ -13,10 +13,15 @@ import { supabase } from '@/src/lib/supabase'
 export default function ProfileScreen() {
   const { session, signOut } = useAuth()
   const userId = session?.user.id ?? ''
-  const { profile, loading, saving, save } = useMyProfile(userId)
+  const { profile, loading, saving, uploadError, clearUploadError, save } = useMyProfile(userId)
   const [editVisible, setEditVisible] = useState(false)
   const [previewVisible, setPreviewVisible] = useState(false)
   const router = useRouter()
+
+  // Show upload errors as an alert whenever they appear
+  if (uploadError) {
+    Alert.alert('Foto-Upload', uploadError, [{ text: 'OK', onPress: clearUploadError }])
+  }
 
   const handleSignOut = () => {
     Alert.alert('Ausloggen', 'Möchtest du dich wirklich ausloggen?', [
@@ -149,7 +154,7 @@ export default function ProfileScreen() {
             const active = profile.travelStyle === s.label
             return (
               <LinearGradient key={s.label}
-                colors={active ? [colors.primary, colors.secondary] : ['transparent', 'transparent']}
+                colors={active ? [colors.primary, colors.primaryDark] : ['transparent', 'transparent']}
                 style={[styles.styleChip, !active && styles.styleChipInactive]}>
                 <Text style={styles.styleIcon}>{s.icon}</Text>
                 <Text style={[styles.styleLabel, active && { color: '#fff' }]}>{s.label}</Text>
