@@ -22,8 +22,19 @@ export function useGroupMessages(groupId: string, userId: string) {
   }, [groupId])
 
   const sendMessage = async (content: string) => {
+    const optimistic: GroupMessage = {
+      id: `optimistic-${Date.now()}`,
+      group_id: groupId,
+      sender_id: userId,
+      content,
+      created_at: new Date().toISOString(),
+    }
+    setMessages(prev => [...prev, optimistic])
     const { error } = await supabase.from('group_messages').insert({ group_id: groupId, sender_id: userId, content })
-    if (error) throw new Error(error.message)
+    if (error) {
+      setMessages(prev => prev.filter(m => m.id !== optimistic.id))
+      throw new Error(error.message)
+    }
   }
 
   return { messages, loading, sendMessage }

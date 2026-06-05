@@ -50,7 +50,12 @@ export default function GroupDetailScreen() {
     const text = input.trim()
     if (!text) return
     setInput('')
-    try { await sendMessage(text) } catch { Alert.alert('Fehler', 'Nachricht nicht gesendet.') }
+    try {
+      await sendMessage(text)
+    } catch (e: any) {
+      setInput(text)
+      Alert.alert('Fehler', e.message ?? 'Nachricht nicht gesendet.')
+    }
   }
 
   const handleSavePlan = async () => {
