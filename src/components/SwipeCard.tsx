@@ -1,6 +1,26 @@
 import { colors, gradients, radius, spacing } from '../constants/theme'
 import { Profile, TravelDestination, UserInterest } from '../types'
 import { Dimensions, Image, Pressable, StyleSheet, Text, View } from 'react-native'
+
+const DEMO_IMAGES: Record<string, any> = {
+  'demo-1':  require('../../assets/demo/laura.jpg'),
+  'demo-2':  require('../../assets/demo/max.jpg'),
+  'demo-3':  require('../../assets/demo/sofia.jpg'),
+  'demo-4':  require('../../assets/demo/jonas.jpg'),
+  'demo-5':  require('../../assets/demo/mia.jpg'),
+  'demo-6':  require('../../assets/demo/luca.jpg'),
+  'demo-7':  require('../../assets/demo/emma.jpg'),
+  'demo-8':  require('../../assets/demo/noah.jpg'),
+  'demo-9':  require('../../assets/demo/yuki.jpg'),
+  'demo-10': require('../../assets/demo/ali.jpg'),
+  'demo-11': require('../../assets/demo/chloe.jpg'),
+  'demo-12': require('../../assets/demo/finn.jpg'),
+  'demo-13': require('../../assets/demo/amara.jpg'),
+  'demo-14': require('../../assets/demo/carlos.jpg'),
+  'demo-15': require('../../assets/demo/anna.jpg'),
+  'demo-16': require('../../assets/demo/ben.jpg'),
+  'demo-17': require('../../assets/demo/priya.jpg'),
+}
 import { LinearGradient } from 'expo-linear-gradient'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Animated, {
@@ -12,7 +32,7 @@ import Animated, {
   interpolate,
   Extrapolation,
 } from 'react-native-reanimated'
-import { forwardRef, useImperativeHandle, useState } from 'react'
+import { forwardRef, useImperativeHandle, useState, useCallback } from 'react'
 import ProfileDetailModal from './ProfileDetailModal'
 
 const { width, height } = Dimensions.get('window')
@@ -40,6 +60,7 @@ const SwipeCard = forwardRef<SwipeCardRef, Props>(function SwipeCard(
   const translateX = useSharedValue(0)
   const translateY = useSharedValue(0)
   const [detailVisible, setDetailVisible] = useState(false)
+  const [imgError, setImgError] = useState(false)
 
   useImperativeHandle(ref, () => ({
     triggerSwipe(direction: 'left' | 'right') {
@@ -100,11 +121,13 @@ const SwipeCard = forwardRef<SwipeCardRef, Props>(function SwipeCard(
   return (
     <GestureDetector gesture={gesture}>
       <Animated.View style={[styles.card, cardStyle]}>
-        {profile.profile_image_url ? (
-          <Image source={{ uri: profile.profile_image_url }} style={styles.photo} resizeMode="cover" />
+        {DEMO_IMAGES[profile.id] ? (
+          <Image source={DEMO_IMAGES[profile.id]} style={styles.photo} resizeMode="cover" />
+        ) : profile.profile_image_url && !imgError ? (
+          <Image source={{ uri: profile.profile_image_url }} style={styles.photo} resizeMode="cover" onError={() => setImgError(true)} />
         ) : (
-          <LinearGradient colors={gradients.brand} style={styles.photo}>
-            <Text style={styles.avatarEmoji}>👤</Text>
+          <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={styles.photo}>
+            <Text style={styles.avatarInitial}>{profile.name.charAt(0)}</Text>
           </LinearGradient>
         )}
 
@@ -187,6 +210,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   avatarEmoji: { fontSize: 80 },
+  avatarInitial: { fontSize: 120, fontWeight: '900', color: 'rgba(255,255,255,0.3)' },
   overlay: {
     position: 'absolute',
     bottom: 0, left: 0, right: 0,

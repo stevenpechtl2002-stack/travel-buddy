@@ -6,12 +6,14 @@ import FilterModal, { Filters, DEFAULT_FILTERS } from '@/src/components/FilterMo
 import SceneBackground from '@/src/components/SceneBackground'
 import { colors, gradients, spacing } from '@/src/constants/theme'
 import { useAuth } from '@/src/hooks/useAuth'
+import { addDemoMatch } from '@/src/lib/demoMatchStore'
 import { useDiscover } from '@/src/hooks/useDiscover'
 import { useSwipe } from '@/src/hooks/useSwipe'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import { useEffect, useRef, useState } from 'react'
 import { Animated, ActivityIndicator, Alert, Dimensions, Easing, Pressable, StyleSheet, Text, View } from 'react-native'
+import ReAnimated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming, Easing as ReEasing } from 'react-native-reanimated'
 
 const SCREEN_WIDTH = Dimensions.get('window').width
 
@@ -27,26 +29,21 @@ export default function DiscoverScreen() {
   const router = useRouter()
   const cardRef = useRef<SwipeCardRef>(null)
   const camelX = useRef(new Animated.Value(-150)).current
-  const planeX = useRef(new Animated.Value(-200)).current
+  const planeX = useSharedValue(-200)
+
+  const planeAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: planeX.value }],
+  }))
 
   useEffect(() => {
-    const fly = Animated.loop(
-      Animated.sequence([
-        Animated.timing(planeX, {
-          toValue: SCREEN_WIDTH + 200,
-          duration: 6000,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        }),
-        Animated.timing(planeX, {
-          toValue: -200,
-          duration: 0,
-          useNativeDriver: true,
-        }),
-      ])
+    planeX.value = withRepeat(
+      withSequence(
+        withTiming(SCREEN_WIDTH + 200, { duration: 8000, easing: ReEasing.linear }),
+        withTiming(-200, { duration: 0 })
+      ),
+      -1,
+      false
     )
-    fly.start()
-    return () => fly.stop()
   }, [])
 
   useEffect(() => {
@@ -109,15 +106,32 @@ export default function DiscoverScreen() {
     const top = filteredCandidates[0]
     if (!top) return
     setProcessing(true)
-    const { isMatch, error: swipeError } = await recordSwipe(top.profile.id, direction)
-    if (swipeError) {
-      Alert.alert('Fehler', 'Swipe konnte nicht gespeichert werden.')
-      setProcessing(false)
-      return
-    }
+    const isDemo = top.profile.id.startsWith('demo-')
     const remainingAfterRemove = filteredCandidates.length - 1
+
+    if (isDemo) {
+      // Demo: 50% Match-Chance beim Rechts-Swipen
+      if (direction === 'right' && Math.random() < 0.5) {
+        setMatchInfo({ name: top.profile.name })
+        addDemoMatch({
+          id: `demo-match-${top.profile.id}`,
+          user_a_id: userId,
+          user_b_id: top.profile.id,
+          created_at: new Date().toISOString(),
+          other_user: top.profile,
+        })
+      }
+    } else {
+      const { isMatch, error: swipeError } = await recordSwipe(top.profile.id, direction)
+      if (swipeError) {
+        Alert.alert('Fehler', 'Swipe konnte nicht gespeichert werden.')
+        setProcessing(false)
+        return
+      }
+      if (isMatch) setMatchInfo({ name: top.profile.name })
+    }
+
     removeTop()
-    if (isMatch) setMatchInfo({ name: top.profile.name })
     if (remainingAfterRemove <= 3) reload()
     setProcessing(false)
   }
@@ -148,30 +162,35 @@ export default function DiscoverScreen() {
   )
 
   if (filteredCandidates.length === 0) return (
-    <SceneBackground>
-      <View style={styles.center}>
-        <Text style={styles.emptyEmoji}>🌍</Text>
-        <Text style={styles.emptyText}>
-          {candidates.length > 0 ? 'Keine Reisenden mit diesen Filtern' : 'Keine neuen Reisenden gerade'}
-        </Text>
-        <Text style={styles.emptySub}>
-          {candidates.length > 0 ? 'Ändere deine Filtereinstellungen' : 'Schau später nochmal vorbei'}
-        </Text>
-        {candidates.length > 0 ? (
-          <Pressable style={styles.reloadButton} onPress={() => setFilterVisible(true)}>
-            <LinearGradient colors={gradients.brandH} style={styles.reloadGrad}>
-              <Text style={styles.reloadText}>Filter anpassen</Text>
-            </LinearGradient>
-          </Pressable>
-        ) : (
-          <Pressable style={styles.reloadButton} onPress={reload}>
-            <LinearGradient colors={gradients.brandH} style={styles.reloadGrad}>
-              <Text style={styles.reloadText}>Aktualisieren</Text>
-            </LinearGradient>
-          </Pressable>
-        )}
-      </View>
-    </SceneBackground>
+    <View style={{ flex: 1 }}>
+      <SceneBackground>
+        <View style={styles.center}>
+          <Text style={styles.emptyEmoji}>🌍</Text>
+          <Text style={styles.emptyText}>
+            {candidates.length > 0 ? 'Keine Reisenden mit diesen Filtern' : 'Keine neuen Reisenden gerade'}
+          </Text>
+          <Text style={styles.emptySub}>
+            {candidates.length > 0 ? 'Ändere deine Filtereinstellungen' : 'Schau später nochmal vorbei'}
+          </Text>
+          {candidates.length > 0 ? (
+            <Pressable style={styles.reloadButton} onPress={() => setFilterVisible(true)}>
+              <LinearGradient colors={gradients.brandH} style={styles.reloadGrad}>
+                <Text style={styles.reloadText}>Filter anpassen</Text>
+              </LinearGradient>
+            </Pressable>
+          ) : (
+            <Pressable style={styles.reloadButton} onPress={reload}>
+              <LinearGradient colors={gradients.brandH} style={styles.reloadGrad}>
+                <Text style={styles.reloadText}>Aktualisieren</Text>
+              </LinearGradient>
+            </Pressable>
+          )}
+        </View>
+      </SceneBackground>
+      <ReAnimated.View style={[styles.plane, planeAnimStyle]} pointerEvents="none">
+        <FlyingPlane />
+      </ReAnimated.View>
+    </View>
   )
 
   const top = filteredCandidates[0]
@@ -209,6 +228,7 @@ export default function DiscoverScreen() {
       {/* Card + Buttons together */}
       <View style={styles.cardWrapper}>
         <SwipeCard
+          key={top.profile.id}
           ref={cardRef}
           profile={top.profile}
           destinations={top.destinations}
@@ -247,10 +267,10 @@ export default function DiscoverScreen() {
     </View>
     </SceneBackground>
 
-    {/* Airplane — ganz vorne, fest positioniert zum Testen */}
-    <View style={styles.plane} pointerEvents="none">
-      <Text style={{ fontSize: 60 }}>✈️</Text>
-    </View>
+    {/* Animated airplane */}
+    <ReAnimated.View style={[styles.plane, planeAnimStyle]} pointerEvents="none">
+      <FlyingPlane />
+    </ReAnimated.View>
 
     {/* Camel outside SceneBackground */}
     <Animated.View style={[styles.camel, { transform: [{ translateX: camelX }] }]} pointerEvents="none">
@@ -299,7 +319,7 @@ const styles = StyleSheet.create({
   buttons: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center',
     paddingTop: 16, gap: 40, zIndex: 10 },
   camel: { position: 'absolute', bottom: 92, zIndex: 1 },
-  plane: { position: 'absolute', top: 200, left: 100, zIndex: 999, elevation: 999 },
+  plane: { position: 'absolute', top: 95, zIndex: 999, elevation: 999 },
   nopeBtn: { width: 72, height: 72, borderRadius: 36,
     backgroundColor: 'rgba(255,255,255,0.18)',
     justifyContent: 'center', alignItems: 'center',

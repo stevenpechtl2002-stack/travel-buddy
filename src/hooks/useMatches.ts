@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { Match, Profile } from '../types'
+import { getDemoMatches, subscribeDemoMatches } from '../lib/demoMatchStore'
 
 const DEMO_MATCHES: Match[] = [
   {
@@ -43,6 +44,16 @@ export function useMatches(userId: string) {
       return
     }
     loadMatches()
+
+    // Live-Update wenn ein Demo-Match hinzukommt
+    const unsubscribe = subscribeDemoMatches(() => {
+      setMatches(prev => {
+        const demo = getDemoMatches()
+        const existing = prev.filter(m => !m.id.startsWith('demo-match-'))
+        return [...demo, ...existing]
+      })
+    })
+    return unsubscribe
   }, [userId])
 
   const loadMatches = async () => {
@@ -82,7 +93,7 @@ export function useMatches(userId: string) {
       })
       .filter((m: Match | null): m is Match => m !== null)
 
-    setMatches(enriched)
+    setMatches([...getDemoMatches(), ...enriched])
     setLoading(false)
   }
 
