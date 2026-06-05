@@ -268,7 +268,7 @@ export function useDiscover(userId: string) {
       .from('profiles')
       .select('*')
       .eq('onboarding_complete', true)
-      .not('id', 'in', `(${swipedIds.map(id => `"${id}"`).join(',')})`)
+      .not('id', 'in', `(${swipedIds.join(',')})`)
       .limit(20)
 
     if (profilesError) {
@@ -289,10 +289,8 @@ export function useDiscover(userId: string) {
         )
       : []
 
-    // Always include demo profiles so there's always someone to swipe on
-    const alreadySwiped = new Set(swipedIds)
-    const filteredDemo = DEMO_CANDIDATES.filter(d => !alreadySwiped.has(d.profile.id))
-    setCandidates([...enriched, ...filteredDemo])
+    // Always include all demo profiles (demo IDs are never in Supabase swipes)
+    setCandidates([...enriched, ...DEMO_CANDIDATES])
     setLoading(false)
   }, [userId])
 

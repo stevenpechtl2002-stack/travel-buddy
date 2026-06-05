@@ -12,7 +12,7 @@ import { useSwipe } from '@/src/hooks/useSwipe'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import { useEffect, useRef, useState } from 'react'
-import { Animated, ActivityIndicator, Alert, Dimensions, Easing, Pressable, StyleSheet, Text, View } from 'react-native'
+import { Animated, ActivityIndicator, Dimensions, Easing, Pressable, StyleSheet, Text, View } from 'react-native'
 import ReAnimated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming, Easing as ReEasing } from 'react-native-reanimated'
 
 const SCREEN_WIDTH = Dimensions.get('window').width
@@ -122,12 +122,7 @@ export default function DiscoverScreen() {
         })
       }
     } else {
-      const { isMatch, error: swipeError } = await recordSwipe(top.profile.id, direction)
-      if (swipeError) {
-        Alert.alert('Fehler', 'Swipe konnte nicht gespeichert werden.')
-        setProcessing(false)
-        return
-      }
+      const { isMatch } = await recordSwipe(top.profile.id, direction)
       if (isMatch) setMatchInfo({ name: top.profile.name })
     }
 
