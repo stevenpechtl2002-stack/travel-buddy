@@ -3,6 +3,7 @@ import SwipeCard, { SwipeCardRef } from '@/src/components/SwipeCard'
 import WalkingCamel from '@/src/components/WalkingCamel'
 import FlyingPlane from '@/src/components/FlyingPlane'
 import FilterModal, { Filters, DEFAULT_FILTERS } from '@/src/components/FilterModal'
+import UserSearchModal from '@/src/components/UserSearchModal'
 import SceneBackground from '@/src/components/SceneBackground'
 import { colors, gradients, spacing } from '@/src/constants/theme'
 import { useAuth } from '@/src/hooks/useAuth'
@@ -26,6 +27,7 @@ export default function DiscoverScreen() {
   const [processing, setProcessing] = useState(false)
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
   const [filterVisible, setFilterVisible] = useState(false)
+  const [searchVisible, setSearchVisible] = useState(false)
   const router = useRouter()
   const cardRef = useRef<SwipeCardRef>(null)
   const camelX = useRef(new Animated.Value(-150)).current
@@ -197,26 +199,31 @@ export default function DiscoverScreen() {
 
       {/* Header */}
       <View style={styles.header}>
-        <View>
-          <LinearGradient colors={gradients.brand} style={styles.logoGrad}>
-            <Text style={styles.logoInner}>✈</Text>
-          </LinearGradient>
-        </View>
-        <View style={styles.headerCenter}>
-          <Text style={styles.logo}>Travel Buddy</Text>
-          <Text style={styles.subtitle}>{filteredCandidates.length} Reisende online</Text>
-        </View>
-        <Pressable style={styles.filterBtn} onPress={() => setFilterVisible(true)}>
-          {activeFilterCount > 0 && (
-            <View style={styles.filterBadge}>
-              <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
-            </View>
-          )}
-          <Text style={styles.filterIcon}>⚙</Text>
+        {/* Logo links */}
+        <LinearGradient colors={gradients.brand} style={styles.logoGrad}>
+          <Text style={styles.logoInner}>✈</Text>
+        </LinearGradient>
+
+        {/* Such-Button Mitte */}
+        <Pressable style={styles.searchBtn} onPress={() => setSearchVisible(true)}>
+          <Text style={styles.searchBtnIcon}>🔍</Text>
+          <Text style={styles.searchBtnText}>Suchen</Text>
         </Pressable>
-        <View style={styles.onlinePill}>
-          <View style={styles.greenDot} />
-          <Text style={styles.onlineText}>Live</Text>
+
+        {/* Filter + Live rechts */}
+        <View style={styles.headerRight}>
+          <Pressable style={styles.filterBtn} onPress={() => setFilterVisible(true)}>
+            {activeFilterCount > 0 && (
+              <View style={styles.filterBadge}>
+                <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
+              </View>
+            )}
+            <Text style={styles.filterIcon}>⚙</Text>
+          </Pressable>
+          <View style={styles.onlinePill}>
+            <View style={styles.greenDot} />
+            <Text style={styles.onlineText}>Live</Text>
+          </View>
         </View>
       </View>
 
@@ -259,6 +266,12 @@ export default function DiscoverScreen() {
         onChange={setFilters}
         onClose={() => setFilterVisible(false)}
       />
+
+      <UserSearchModal
+        visible={searchVisible}
+        currentUserId={userId}
+        onClose={() => setSearchVisible(false)}
+      />
     </View>
     </SceneBackground>
 
@@ -288,13 +301,21 @@ const styles = StyleSheet.create({
   reloadButton: { borderRadius: 50, overflow: 'hidden' },
   reloadGrad: { paddingHorizontal: 28, paddingVertical: 13 },
   reloadText: { color: '#fff', fontWeight: 'bold', fontSize: 15 },
-  header: { flexDirection: 'row', alignItems: 'center', gap: 10,
+  header: { flexDirection: 'row', alignItems: 'center', gap: 8,
     paddingHorizontal: spacing.lg, paddingTop: 58, paddingBottom: 10 },
-  logoGrad: { width: 38, height: 38, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  logoInner: { fontSize: 18, color: '#fff' },
-  headerCenter: { flex: 1 },
-  logo: { fontSize: 18, fontWeight: '900', color: colors.text },
-  subtitle: { fontSize: 11, color: colors.textMuted },
+  logoGrad: { width: 36, height: 36, borderRadius: 11, justifyContent: 'center', alignItems: 'center' },
+  logoInner: { fontSize: 17, color: '#fff' },
+  // Search button — center of header
+  searchBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    backgroundColor: 'rgba(245,240,235,0.12)', borderRadius: 22,
+    paddingHorizontal: 14, paddingVertical: 9,
+    borderWidth: 1, borderColor: 'rgba(245,240,235,0.2)',
+    marginHorizontal: 6,
+  },
+  searchBtnIcon: { fontSize: 14 },
+  searchBtnText: { fontSize: 14, fontWeight: '700', color: colors.text },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   filterBtn: { width: 36, height: 36, borderRadius: 12,
     backgroundColor: 'rgba(245,240,235,0.1)', justifyContent: 'center', alignItems: 'center',
     borderWidth: 1, borderColor: 'rgba(245,240,235,0.18)' },
@@ -303,9 +324,9 @@ const styles = StyleSheet.create({
     borderRadius: 8, minWidth: 16, height: 16, justifyContent: 'center', alignItems: 'center',
     zIndex: 1, paddingHorizontal: 3 },
   filterBadgeText: { color: '#fff', fontSize: 9, fontWeight: '900' },
-  onlinePill: { flexDirection: 'row', alignItems: 'center', gap: 5,
+  onlinePill: { flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: 'rgba(245,240,235,0.1)', borderRadius: 50,
-    paddingHorizontal: 10, paddingVertical: 5,
+    paddingHorizontal: 8, paddingVertical: 5,
     borderWidth: 1, borderColor: 'rgba(245,240,235,0.18)' },
   greenDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#4ade80' },
   onlineText: { fontSize: 11, fontWeight: '700', color: colors.text },
