@@ -119,7 +119,7 @@ export default function GroupDetailScreen() {
             />
             <View style={styles.inputRow}>
               <TextInput style={styles.chatInput} value={input} onChangeText={setInput}
-                placeholder="Nachricht..." placeholderTextColor="rgba(255,255,255,0.4)"
+                placeholder="Nachricht..." placeholderTextColor="rgba(0,0,0,0.35)"
                 returnKeyType="send" onSubmitEditing={handleSend} />
               <Pressable onPress={handleSend}>
                 <LinearGradient colors={gradients.brand} style={styles.sendBtn}>
@@ -239,9 +239,9 @@ const styles = StyleSheet.create({
   emptyChatText: { color: 'rgba(255,255,255,0.5)', fontSize: 14 },
   inputRow: { flexDirection: 'row', padding: spacing.md, gap: 10,
     borderTopWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
-  chatInput: { flex: 1, backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 22,
-    paddingHorizontal: 16, paddingVertical: 10, fontSize: 15, color: '#fff',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
+  chatInput: { flex: 1, backgroundColor: 'rgba(255,255,255,0.95)', borderRadius: 22,
+    paddingHorizontal: 16, paddingVertical: 10, fontSize: 15, color: '#1a1a2e',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.4)' },
   sendBtn: { width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
   sendIcon: { color: '#fff', fontSize: 16 },
   planContent: { padding: spacing.lg, paddingBottom: 100 },
