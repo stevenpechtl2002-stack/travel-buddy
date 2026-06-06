@@ -1,5 +1,6 @@
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs'
 import { LinearGradient } from 'expo-linear-gradient'
+import { useRouter } from 'expo-router'
 import { Dimensions, Pressable, StyleSheet, Text, View } from 'react-native'
 import Svg, { Defs, LinearGradient as SvgGradient, Path, Stop } from 'react-native-svg'
 import { colors } from '../constants/theme'
@@ -13,6 +14,7 @@ const TAB_ICONS: Record<string, string> = {
   groups: '◈',
   map: '◎',
   profile: '○',
+  feed: '⌂',
 }
 const TAB_LABELS: Record<string, string> = {
   discover: 'Entdecken',
@@ -20,6 +22,7 @@ const TAB_LABELS: Record<string, string> = {
   groups: 'Gruppen',
   map: 'Karte',
   profile: 'Profil',
+  feed: 'Feed',
 }
 
 function DuneSvg() {
@@ -62,6 +65,7 @@ function DuneSvg() {
 }
 
 export default function SandDuneTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+  const router = useRouter()
   return (
     <View style={styles.wrapper}>
       <View style={styles.duneContainer}>
@@ -95,6 +99,11 @@ export default function SandDuneTabBar({ state, descriptors, navigation }: Botto
             </Pressable>
           )
         })}
+        {/* Feed button */}
+        <Pressable style={styles.tab} onPress={() => router.push('/feed')} accessibilityRole="button" accessibilityLabel="Feed">
+          <Text style={styles.inactiveIcon}>⌂</Text>
+          <Text style={styles.label}>Feed</Text>
+        </Pressable>
       </LinearGradient>
     </View>
   )
