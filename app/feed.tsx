@@ -59,12 +59,20 @@ function PostCard({ post, currentUserId, onLike, onRepost, onDelete }: {
   const isRepost = post.type === 'repost'
   const displayPost = isRepost && post.repost_origin ? post.repost_origin : post
   const author = post.author
+  const isThread = !displayPost.image_url && !!displayPost.content
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, isThread && styles.threadCard]}>
       {isRepost && (
         <View style={styles.repostBanner}>
           <Text style={styles.repostBannerText}>↩ {author?.name ?? 'Jemand'} hat geteilt</Text>
+        </View>
+      )}
+
+      {/* Thread badge */}
+      {isThread && !isRepost && (
+        <View style={styles.threadBadge}>
+          <Text style={styles.threadBadgeText}>✍️ Thread</Text>
         </View>
       )}
 
@@ -87,7 +95,13 @@ function PostCard({ post, currentUserId, onLike, onRepost, onDelete }: {
         )}
       </View>
 
-      {displayPost.content ? (
+      {/* Thread: big readable text with left accent bar */}
+      {isThread ? (
+        <View style={styles.threadBody}>
+          <View style={styles.threadAccent} />
+          <Text style={styles.threadText}>{displayPost.content}</Text>
+        </View>
+      ) : displayPost.content ? (
         <Text style={styles.content}>{displayPost.content}</Text>
       ) : null}
 
@@ -97,7 +111,6 @@ function PostCard({ post, currentUserId, onLike, onRepost, onDelete }: {
 
       {/* Actions */}
       <View style={styles.actions}>
-        {/* Like */}
         <Pressable style={styles.actionBtn} onPress={handleLike}>
           <Animated.Text style={[styles.actionIcon, { transform: [{ scale: likeAnim }] },
             post.liked_by_me && { color: '#e05555' }]}>
@@ -108,7 +121,6 @@ function PostCard({ post, currentUserId, onLike, onRepost, onDelete }: {
           </Text>
         </Pressable>
 
-        {/* Repost */}
         <Pressable style={styles.actionBtn} onPress={onRepost}>
           <Text style={[styles.actionIcon, post.reposted_by_me && { color: colors.primary }]}>↩</Text>
           <Text style={[styles.actionCount, post.reposted_by_me && { color: colors.primary }]}>
@@ -116,7 +128,6 @@ function PostCard({ post, currentUserId, onLike, onRepost, onDelete }: {
           </Text>
         </Pressable>
 
-        {/* Comment placeholder */}
         <Pressable style={styles.actionBtn}>
           <Text style={styles.actionIcon}>💬</Text>
           <Text style={styles.actionCount}>{post.comment_count > 0 ? post.comment_count : ''}</Text>
@@ -471,6 +482,28 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface, marginHorizontal: spacing.md, marginBottom: 12,
     borderRadius: 20, overflow: 'hidden',
     borderWidth: 1, borderColor: colors.border,
+  },
+  // Thread card — slightly different background
+  threadCard: {
+    backgroundColor: '#141f30',
+    borderColor: 'rgba(232,132,92,0.15)',
+  },
+  threadBadge: {
+    alignSelf: 'flex-start', marginHorizontal: spacing.md, marginTop: 10,
+    backgroundColor: 'rgba(232,132,92,0.12)', borderRadius: 8,
+    paddingHorizontal: 8, paddingVertical: 3,
+    borderWidth: 1, borderColor: 'rgba(232,132,92,0.25)',
+  },
+  threadBadgeText: { fontSize: 10, fontWeight: '800', color: colors.primary, letterSpacing: 0.3 },
+  threadBody: {
+    flexDirection: 'row', paddingHorizontal: spacing.md, paddingBottom: spacing.md, gap: 10,
+  },
+  threadAccent: {
+    width: 3, borderRadius: 2, backgroundColor: colors.primary,
+    alignSelf: 'stretch', opacity: 0.7,
+  },
+  threadText: {
+    flex: 1, fontSize: 17, color: colors.text, lineHeight: 26, fontWeight: '500',
   },
   repostBanner: {
     backgroundColor: 'rgba(232,132,92,0.1)', paddingHorizontal: spacing.md, paddingVertical: 6,

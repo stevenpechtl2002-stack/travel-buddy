@@ -78,7 +78,7 @@ const navS = StyleSheet.create({
 // ── Compose modal ─────────────────────────────────────────────
 function ComposeModal({ visible, userId, type, onClose, onDone }: {
   visible: boolean; userId: string; type: 'post' | 'thread'
-  onClose: () => void; onDone: () => void
+  onClose: () => void; onDone: (navigateToFeed?: boolean) => void
 }) {
   const [text, setText] = useState('')
   const [location, setLocation] = useState('')
@@ -123,7 +123,7 @@ function ComposeModal({ visible, userId, type, onClose, onDone }: {
         type: 'post',
         like_count: 0, repost_count: 0, comment_count: 0,
       })
-      reset(); onClose(); onDone()
+      reset(); onClose(); onDone(type === 'thread')
     } catch (e: any) {
       Alert.alert('Fehler', e.message)
     } finally {
@@ -452,7 +452,7 @@ export default function FeedProfileScreen() {
         userId={userId}
         type={composeType}
         onClose={() => setComposeVisible(false)}
-        onDone={load}
+        onDone={(goToFeed) => { load(); if (goToFeed) router.push('/feed') }}
       />
     </View>
   )
