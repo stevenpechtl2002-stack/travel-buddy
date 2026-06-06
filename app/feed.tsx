@@ -126,6 +126,67 @@ function PostCard({ post, currentUserId, onLike, onRepost, onDelete }: {
   )
 }
 
+// ── Feed Tab Bar ──────────────────────────────────────────────
+function FeedTabBar({ active }: { active: 'home' | 'chat' | 'search' | 'profile' }) {
+  const router = useRouter()
+  const tabs = [
+    { key: 'home',    icon: '⌂',  label: 'Home',    route: '/feed' },
+    { key: 'chat',    icon: '💬', label: 'Chat',    route: '/(tabs)/matches' },
+    { key: 'search',  icon: '⊙',  label: 'Suchen',  route: '/(tabs)/discover' },
+    { key: 'profile', icon: '◯',  label: 'Profil',  route: '/(tabs)/profile' },
+  ] as const
+
+  return (
+    <View style={navStyles.wrapper}>
+      <View style={navStyles.glow} />
+      {tabs.map(tab => {
+        const focused = active === tab.key
+        return (
+          <Pressable
+            key={tab.key}
+            style={navStyles.tab}
+            onPress={() => router.push(tab.route as any)}
+          >
+            {focused ? (
+              <LinearGradient colors={gradients.brand} style={navStyles.pill}>
+                <Text style={navStyles.activeIcon}>{tab.icon}</Text>
+              </LinearGradient>
+            ) : (
+              <Text style={navStyles.inactiveIcon}>{tab.icon}</Text>
+            )}
+            <Text style={[navStyles.label, focused && navStyles.labelActive]}>{tab.label}</Text>
+          </Pressable>
+        )
+      })}
+    </View>
+  )
+}
+
+const navStyles = StyleSheet.create({
+  wrapper: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    flexDirection: 'row',
+    backgroundColor: '#111d2e',
+    paddingTop: 10, paddingBottom: 30,
+    borderTopWidth: 1, borderColor: 'rgba(232,132,92,0.18)',
+    shadowColor: '#000', shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.5, shadowRadius: 16, elevation: 20,
+  },
+  glow: {
+    position: 'absolute', top: 0, left: '15%', right: '15%', height: 1,
+    backgroundColor: 'rgba(232,132,92,0.2)',
+  },
+  tab: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 4 },
+  pill: {
+    width: 44, height: 36, borderRadius: 18,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  activeIcon: { fontSize: 20, color: '#fff', fontWeight: '700' },
+  inactiveIcon: { fontSize: 20, color: 'rgba(245,240,235,0.28)' },
+  label: { fontSize: 10, fontWeight: '600', color: 'rgba(245,240,235,0.35)' },
+  labelActive: { color: '#e8845c', fontWeight: '800' },
+})
+
 // ── Compose Modal ─────────────────────────────────────────────
 function ComposeModal({ visible, userId, onClose, onCreate }: {
   visible: boolean; userId: string
@@ -381,6 +442,9 @@ export default function FeedScreen() {
         onClose={() => setStoryViewerVisible(false)}
         onSeen={markSeen}
       />
+
+      {/* Bottom nav */}
+      <FeedTabBar active="home" />
     </View>
   )
 }
@@ -399,8 +463,8 @@ const styles = StyleSheet.create({
   composeBtnGrad: { paddingHorizontal: 14, paddingVertical: 7 },
   composeBtnText: { color: '#fff', fontWeight: '800', fontSize: 13 },
 
-  // Feed
-  feed: { paddingVertical: 8, paddingBottom: 100 },
+  // Feed — extra bottom padding so content clears the tab bar
+  feed: { paddingVertical: 8, paddingBottom: 160 },
 
   // Post card
   card: {
@@ -440,8 +504,8 @@ const styles = StyleSheet.create({
   emptyBtnGrad: { paddingHorizontal: 28, paddingVertical: 13 },
   emptyBtnText: { color: '#fff', fontWeight: '900', fontSize: 15 },
 
-  // FAB
-  fab: { position: 'absolute', bottom: 32, right: 24, borderRadius: 28, overflow: 'hidden',
+  // FAB — sits above the tab bar (tab bar height ~90)
+  fab: { position: 'absolute', bottom: 100, right: 24, borderRadius: 28, overflow: 'hidden',
     shadowColor: colors.primary, shadowOpacity: 0.4, shadowRadius: 12, elevation: 8 },
   fabGrad: { width: 56, height: 56, justifyContent: 'center', alignItems: 'center' },
   fabText: { fontSize: 24, color: '#fff' },
