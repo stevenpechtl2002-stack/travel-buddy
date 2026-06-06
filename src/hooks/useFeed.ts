@@ -33,15 +33,22 @@ export function useFeed(userId: string) {
     try {
       const { data, error } = await supabase
         .from('posts')
-        .select(`
-          id, user_id, content, image_url, location, type, repost_of,
-          like_count, repost_count, comment_count, created_at,
-          author:profiles!posts_user_id_fkey(name, profile_image_url)
-        `)
+        .select('id, user_id, content, image_url, location, type, repost_of, like_count, repost_count, comment_count, created_at')
         .order('created_at', { ascending: false })
         .limit(40)
 
       if (error) { console.warn('Feed query error:', JSON.stringify(error)); throw error }
+
+      // Fetch author profiles separately
+      const userIds = [...new Set((data ?? []).map(p => p.user_id))]
+      let profilesMap: Record<string, { name: string; profile_image_url: string | null }> = {}
+      if (userIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, name, profile_image_url')
+          .in('id', userIds)
+        for (const pr of profilesData ?? []) profilesMap[pr.id] = { name: pr.name, profile_image_url: pr.profile_image_url }
+      }
 
       // Fetch repost origins
       const repostIds = (data ?? [])
@@ -52,9 +59,9 @@ export function useFeed(userId: string) {
       if (repostIds.length > 0) {
         const { data: origins } = await supabase
           .from('posts')
-          .select('id, user_id, content, image_url, location, created_at, author:profiles!posts_user_id_fkey(name, profile_image_url)')
+          .select('id, user_id, content, image_url, location, created_at')
           .in('id', repostIds)
-        for (const o of origins ?? []) originsMap[o.id] = o
+        for (const o of origins ?? []) originsMap[o.id] = { ...o, author: profilesMap[o.user_id] ?? { name: '?', profile_image_url: null } }
       }
 
       const mapped: FeedPost[] = (data ?? []).map(p => ({
@@ -69,7 +76,7 @@ export function useFeed(userId: string) {
         repost_count: p.repost_count ?? 0,
         comment_count: p.comment_count ?? 0,
         created_at: p.created_at,
-        author: Array.isArray(p.author) ? p.author[0] : p.author,
+        author: profilesMap[p.user_id] ?? { name: '?', profile_image_url: null },
         repost_origin: p.repost_of ? originsMap[p.repost_of] : undefined,
         liked_by_me: false,
         reposted_by_me: false,
