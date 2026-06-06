@@ -132,7 +132,7 @@ function FeedTabBar({ active }: { active: 'home' | 'chat' | 'search' | 'profile'
   const tabs = [
     { key: 'home',    icon: '⌂',  label: 'Home',    route: '/feed' },
     { key: 'chat',    icon: '💬', label: 'Chat',    route: '/(tabs)/matches' },
-    { key: 'search',  icon: '⊙',  label: 'Suchen',  route: '/(tabs)/discover' },
+    { key: 'search',  icon: '⊙',  label: 'Suchen',  route: '/explore' },
     { key: 'profile', icon: '◯',  label: 'Profil',  route: '/(tabs)/profile' },
   ] as const
 

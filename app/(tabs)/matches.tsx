@@ -145,7 +145,10 @@ export default function MatchesScreen() {
     <View style={styles.root}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Chats</Text>
+        <View>
+          <Text style={styles.headerTitle}>Chats</Text>
+          <Text style={styles.headerSub}>Matches & Nachrichten</Text>
+        </View>
         <Pressable style={styles.headerIcon} onPress={() => router.push('/(tabs)/discover')}>
           <Text style={styles.headerIconText}>✎</Text>
         </Pressable>
@@ -215,6 +218,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderColor: 'rgba(245,240,235,0.07)',
   },
   headerTitle: { fontSize: 26, fontWeight: '900', color: colors.text },
+  headerSub: { fontSize: 12, color: colors.textMuted, marginTop: 1 },
   headerIcon: {
     width: 38, height: 38, borderRadius: 19,
     backgroundColor: 'rgba(245,240,235,0.09)',
