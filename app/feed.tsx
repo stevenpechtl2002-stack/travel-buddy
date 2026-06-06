@@ -457,12 +457,13 @@ export default function FeedScreen() {
   const { session } = useAuth()
   const userId = session?.user.id ?? ''
   const { posts, loading, refreshing, load, createPost, toggleLike, repost, deletePost } = useFeed(userId)
-  const { groups, seenIds, load: loadStories, addStory, markSeen } = useStories(userId)
+  const { groups, seenIds, load: loadStories, addStory, markSeen, deleteStory } = useStories(userId)
   const router = useRouter()
   const [composeVisible, setComposeVisible] = useState(false)
   const [storyViewerVisible, setStoryViewerVisible] = useState(false)
   const [storyStartIndex, setStoryStartIndex] = useState(0)
   const [commentPostId, setCommentPostId] = useState<string | null>(null)
+  const [createSheetVisible, setCreateSheetVisible] = useState(false)
   const [myProfile, setMyProfile] = useState<{ name: string; profile_image_url: string | null }>({
     name: '?', profile_image_url: null,
   })
@@ -551,6 +552,7 @@ export default function FeedScreen() {
               seenIds={seenIds}
               onOpenStory={openStory}
               onAddStory={handleAddStory}
+              onDeleteStory={deleteStory}
             />
           }
           ListEmptyComponent={
@@ -578,12 +580,53 @@ export default function FeedScreen() {
         />
       )}
 
-      {/* Floating compose button */}
-      <Pressable style={styles.fab} onPress={() => setComposeVisible(true)}>
+      {/* Floating create button */}
+      <Pressable style={styles.fab} onPress={() => setCreateSheetVisible(true)}>
         <LinearGradient colors={gradients.brand} style={styles.fabGrad}>
           <Text style={styles.fabText}>✎</Text>
         </LinearGradient>
       </Pressable>
+
+      {/* Create type sheet */}
+      <Modal visible={createSheetVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setCreateSheetVisible(false)}>
+        <View style={sheetS.root}>
+          <View style={sheetS.handle} />
+          <Text style={sheetS.title}>Was möchtest du teilen?</Text>
+          <Pressable style={sheetS.option} onPress={() => { setCreateSheetVisible(false); setComposeVisible(true) }}>
+            <LinearGradient colors={['#1a2a3e', '#243a52']} style={sheetS.optionGrad}>
+              <Text style={sheetS.optionIcon}>📷</Text>
+              <View style={sheetS.optionText}>
+                <Text style={sheetS.optionTitle}>Beitrag</Text>
+                <Text style={sheetS.optionSub}>Foto oder Text im Feed posten</Text>
+              </View>
+              <Text style={sheetS.optionArrow}>›</Text>
+            </LinearGradient>
+          </Pressable>
+          <Pressable style={sheetS.option} onPress={() => { setCreateSheetVisible(false); router.push('/threads') }}>
+            <LinearGradient colors={['#1a2a3e', '#243a52']} style={sheetS.optionGrad}>
+              <Text style={sheetS.optionIcon}>✍️</Text>
+              <View style={sheetS.optionText}>
+                <Text style={sheetS.optionTitle}>Thread</Text>
+                <Text style={sheetS.optionSub}>Gedanken & Erlebnisse teilen</Text>
+              </View>
+              <Text style={sheetS.optionArrow}>›</Text>
+            </LinearGradient>
+          </Pressable>
+          <Pressable style={sheetS.option} onPress={() => { setCreateSheetVisible(false); handleAddStory() }}>
+            <LinearGradient colors={['#1a2a3e', '#243a52']} style={sheetS.optionGrad}>
+              <Text style={sheetS.optionIcon}>📸</Text>
+              <View style={sheetS.optionText}>
+                <Text style={sheetS.optionTitle}>Story</Text>
+                <Text style={sheetS.optionSub}>Verschwinde nach 24 Stunden</Text>
+              </View>
+              <Text style={sheetS.optionArrow}>›</Text>
+            </LinearGradient>
+          </Pressable>
+          <Pressable style={sheetS.cancel} onPress={() => setCreateSheetVisible(false)}>
+            <Text style={sheetS.cancelText}>Abbrechen</Text>
+          </Pressable>
+        </View>
+      </Modal>
 
       <ComposeModal
         visible={composeVisible}
@@ -617,6 +660,21 @@ export default function FeedScreen() {
     </View>
   )
 }
+
+const sheetS = StyleSheet.create({
+  root: { flex: 1, backgroundColor: '#0d1b2e', padding: 20 },
+  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: 'rgba(245,240,235,0.2)', alignSelf: 'center', marginBottom: 24 },
+  title: { fontSize: 20, fontWeight: '900', color: colors.text, marginBottom: 20 },
+  option: { borderRadius: 18, overflow: 'hidden', marginBottom: 12 },
+  optionGrad: { flexDirection: 'row', alignItems: 'center', padding: 18, gap: 14, borderWidth: 1, borderColor: 'rgba(232,132,92,0.15)', borderRadius: 18 },
+  optionIcon: { fontSize: 32 },
+  optionText: { flex: 1 },
+  optionTitle: { fontSize: 17, fontWeight: '900', color: colors.text },
+  optionSub: { fontSize: 13, color: colors.textMuted, marginTop: 2 },
+  optionArrow: { fontSize: 22, color: colors.textMuted },
+  cancel: { marginTop: 8, padding: 16, alignItems: 'center' },
+  cancelText: { fontSize: 16, color: colors.textMuted, fontWeight: '700' },
+})
 
 const styles = StyleSheet.create({
   // Top bar

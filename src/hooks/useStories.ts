@@ -8,6 +8,7 @@ export interface Story {
   caption: string | null
   created_at: string
   expires_at: string
+  seen_count: number
 }
 
 export interface StoryGroup {
@@ -32,7 +33,7 @@ export function useStories(userId: string) {
       // Fetch active stories (not expired) from last 24h
       const { data: storiesData } = await supabase
         .from('stories')
-        .select('id, user_id, image_url, caption, created_at, expires_at')
+        .select('id, user_id, image_url, caption, created_at, expires_at, seen_count')
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false })
 
@@ -87,11 +88,20 @@ export function useStories(userId: string) {
       storyIds.forEach(id => next.add(id))
       return next
     })
-    // Update groups seen state
     setGroups(prev => prev.map(g => ({
       ...g,
       seen: g.stories.every(s => seenIds.has(s.id) || storyIds.includes(s.id)),
     })))
+    // Track views in Supabase
+    storyIds.forEach(storyId => {
+      supabase.from('story_views').insert({ story_id: storyId, viewer_id: userId }).then()
+      supabase.rpc('increment_story_seen', { sid: storyId }).then()
+    })
+  }
+
+  const deleteStory = async (storyId: string) => {
+    await supabase.from('stories').delete().eq('id', storyId)
+    await load()
   }
 
   const addStory = async (imageUrl: string, caption: string | null) => {
@@ -109,5 +119,5 @@ export function useStories(userId: string) {
   const isGroupSeen = (group: StoryGroup) =>
     group.stories.every(s => seenIds.has(s.id))
 
-  return { groups, loading, load, addStory, markSeen, isGroupSeen, seenIds }
+  return { groups, loading, load, addStory, markSeen, deleteStory, isGroupSeen, seenIds }
 }
