@@ -188,7 +188,7 @@ const SwipeCard = forwardRef<SwipeCardRef, Props>(function SwipeCard(
           {/* Name + Religion icon */}
           <View style={styles.nameRow}>
             <Text style={styles.name}>{profile.name}, {profile.age}</Text>
-            {profile.religion ? (
+            {profile.religion && profile.religion !== 'Keine' ? (
               <View style={styles.religionBadge}>
                 <Text style={styles.religionIcon}>{RELIGION_ICONS[profile.religion] ?? '🌍'}</Text>
               </View>

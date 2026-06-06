@@ -59,7 +59,7 @@ export default function ProfilePreviewModal({ visible, data, onClose }: Props) {
               <LinearGradient colors={['transparent', 'rgba(0,0,0,0.88)']} style={styles.overlay}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 }}>
                   <Text style={styles.name}>{data.name || 'Dein Name'}, 25</Text>
-                  {data.religion ? (
+                  {data.religion && data.religion !== 'Keine' ? (
                     <View style={{ backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 12, width: 28, height: 28, justifyContent: 'center', alignItems: 'center' }}>
                       <Text style={{ fontSize: 16 }}>{{ 'Christlich': '✝️', 'Islamisch': '☪️', 'Hinduistisch': '🕉', 'Buddhistisch': '☸️', 'Jüdisch': '✡️', 'Andere': '🌍', 'Keine': '⚪' }[data.religion] ?? '🌍'}</Text>
                     </View>
