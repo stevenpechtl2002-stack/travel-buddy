@@ -318,19 +318,41 @@ export default function FeedProfileScreen() {
           </Pressable>
         </View>
 
-        {/* New post buttons */}
-        <View style={styles.newPostRow}>
-          <Pressable style={styles.newPostBtn} onPress={() => openCompose('post')}>
-            <LinearGradient colors={gradients.brand} style={styles.newPostBtnGrad}>
-              <Text style={styles.newPostIcon}>🖼</Text>
-              <Text style={styles.newPostText}>Post</Text>
-            </LinearGradient>
-          </Pressable>
-          <Pressable style={styles.newPostBtn} onPress={() => openCompose('thread')}>
-            <View style={styles.newPostBtnOutline}>
-              <Text style={styles.newPostIcon}>💬</Text>
-              <Text style={[styles.newPostText, { color: colors.text }]}>Thread</Text>
+        {/* New post — large camera card + thread pill */}
+        <View style={styles.createSection}>
+          {/* Big photo post card */}
+          <Pressable style={styles.photoCard} onPress={() => openCompose('post')} activeOpacity={0.85}>
+            <LinearGradient
+              colors={['#1a3a5c', '#7e4a35', '#c4703a']}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+              style={StyleSheet.absoluteFill}
+            />
+            {/* Frosted icon circle */}
+            <View style={styles.photoCardCircle}>
+              <Text style={styles.photoCardCameraIcon}>📷</Text>
             </View>
+            <Text style={styles.photoCardTitle}>Foto / Video</Text>
+            <Text style={styles.photoCardSub}>Teile deinen Moment</Text>
+            {/* Plus badge */}
+            <View style={styles.photoCardPlus}>
+              <LinearGradient colors={gradients.brand} style={styles.photoCardPlusGrad}>
+                <Text style={styles.photoCardPlusText}>+</Text>
+              </LinearGradient>
+            </View>
+          </Pressable>
+
+          {/* Thread pill — secondary */}
+          <Pressable style={styles.threadPill} onPress={() => openCompose('thread')} activeOpacity={0.8}>
+            <View style={styles.threadPillIcon}>
+              <Text style={{ fontSize: 18 }}>✍️</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.threadPillTitle}>Thread schreiben</Text>
+              <Text style={styles.threadPillSub}>Gedanken teilen…</Text>
+            </View>
+            <LinearGradient colors={gradients.brand} style={styles.threadPillBtn}>
+              <Text style={styles.threadPillBtnText}>+</Text>
+            </LinearGradient>
           </Pressable>
         </View>
 
@@ -492,15 +514,52 @@ const styles = StyleSheet.create({
   },
   shareBtnText: { fontSize: 16, color: colors.text },
 
-  newPostRow: { flexDirection: 'row', paddingHorizontal: spacing.lg, gap: 10, marginBottom: 16 },
-  newPostBtn: { flex: 1, borderRadius: 14, overflow: 'hidden' },
-  newPostBtnGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 11 },
-  newPostBtnOutline: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 11,
-    borderWidth: 1, borderColor: 'rgba(245,240,235,0.2)', borderRadius: 14,
+  // Create section
+  createSection: { paddingHorizontal: spacing.lg, gap: 10, marginBottom: 16 },
+
+  // Big photo card
+  photoCard: {
+    height: 140, borderRadius: 22, overflow: 'hidden',
+    justifyContent: 'center', alignItems: 'center', gap: 4,
+    shadowColor: '#c4703a', shadowOpacity: 0.35, shadowRadius: 14, elevation: 8,
   },
-  newPostIcon: { fontSize: 16 },
-  newPostText: { fontSize: 14, fontWeight: '800', color: '#fff' },
+  photoCardCircle: {
+    width: 54, height: 54, borderRadius: 27,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    justifyContent: 'center', alignItems: 'center',
+    marginBottom: 6,
+    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.25)',
+  },
+  photoCardCameraIcon: { fontSize: 26 },
+  photoCardTitle: { fontSize: 17, fontWeight: '900', color: '#fff' },
+  photoCardSub: { fontSize: 12, color: 'rgba(255,255,255,0.65)', fontWeight: '600' },
+  photoCardPlus: {
+    position: 'absolute', top: 12, right: 12,
+    width: 30, height: 30, borderRadius: 15, overflow: 'hidden',
+    shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 4,
+  },
+  photoCardPlusGrad: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  photoCardPlusText: { color: '#fff', fontSize: 20, fontWeight: '900', lineHeight: 22 },
+
+  // Thread pill
+  threadPill: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: 'rgba(245,240,235,0.07)',
+    borderRadius: 16, padding: 14,
+    borderWidth: 1, borderColor: 'rgba(245,240,235,0.12)',
+  },
+  threadPillIcon: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: 'rgba(245,240,235,0.1)',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  threadPillTitle: { fontSize: 14, fontWeight: '800', color: colors.text, marginBottom: 2 },
+  threadPillSub: { fontSize: 12, color: colors.textMuted },
+  threadPillBtn: {
+    width: 32, height: 32, borderRadius: 16,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  threadPillBtnText: { color: '#fff', fontSize: 20, fontWeight: '900', lineHeight: 22 },
 
   // Tab bar (grid / threads)
   tabBar: {
