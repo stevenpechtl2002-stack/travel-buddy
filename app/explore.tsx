@@ -18,6 +18,7 @@ function ExploreTabBar() {
     { key: 'chat',     icon: '💬', label: 'Chat',      route: '/chats',           center: false },
     { key: 'discover', icon: '✦',  label: 'Entdecken', route: '/(tabs)/discover', center: true  },
     { key: 'search',   icon: '⊙',  label: 'Suchen',    route: '/explore',         center: false },
+    { key: 'profile',  icon: '◯',  label: 'Profil',    route: '/feed-profile',    center: false },
   ] as const
   return (
     <View style={navStyles.wrapper}>
