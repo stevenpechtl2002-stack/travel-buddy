@@ -222,7 +222,7 @@ export default function DiscoverScreen() {
             )}
             <Text style={styles.filterIcon}>⚙</Text>
           </Pressable>
-          <Pressable style={styles.profileBtn} onPress={() => router.push('/feed-profile')}>
+          <Pressable style={styles.profileBtn} onPress={() => router.push('/(tabs)/profile')}>
             <Text style={styles.profileBtnIcon}>◯</Text>
           </Pressable>
         </View>
