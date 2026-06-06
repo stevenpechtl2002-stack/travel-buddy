@@ -16,7 +16,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useRef, useState } from 'react'
 import {
-  ActionSheetIOS, Alert, FlatList, KeyboardAvoidingView, Modal,
+  ActionSheetIOS, Alert, FlatList, Image, KeyboardAvoidingView, Modal,
   Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View,
 } from 'react-native'
 
@@ -450,31 +450,106 @@ export default function GroupDetailScreen() {
         {/* ── MITGLIEDER ── */}
         {tab === 'mitglieder' && (
           <ScrollView contentContainerStyle={styles.tabContent}>
-            <View style={styles.card}>
-              <Text style={styles.cardTitle}>👥 {group.members.length} Mitglieder</Text>
-            </View>
-            {group.members.map(mem => (
-              <Pressable key={mem.user_id} style={styles.memberRow}
-                onPress={() => handleMemberAction(mem.user_id)}
-                disabled={mem.user_id === userId || myRole !== 'admin'}>
-                <View style={styles.memberAvatar}><Text style={{ fontSize: 22 }}>👤</Text></View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.memberName}>{mem.profile?.name ?? 'Unbekannt'}</Text>
-                  <Text style={styles.memberMeta}>
-                    {mem.role === 'admin' ? '⭐ Admin' : mem.role === 'moderator' ? '🔧 Moderator' : '👤 Mitglied'}
-                    {mem.status === 'invited' ? ' · Ausstehend' : ''}
-                  </Text>
-                </View>
-                {myRole === 'admin' && mem.user_id !== userId && <Text style={styles.moreIcon}>···</Text>}
-              </Pressable>
-            ))}
 
+            {/* Header with count */}
+            <View style={styles.membersHeader}>
+              <Text style={styles.membersTitle}>👥 Mitglieder</Text>
+              <View style={styles.membersBadge}>
+                <Text style={styles.membersBadgeText}>
+                  {group.members.filter(m => m.status === 'active').length}
+                  {group.max_members ? ` / ${group.max_members}` : ''}
+                </Text>
+              </View>
+            </View>
+
+            {/* Active members */}
+            {group.members.filter(m => m.status === 'active').map(mem => {
+              const isMe = mem.user_id === userId
+              const isAdmin = myRole === 'admin'
+              const roleBg = mem.role === 'admin' ? 'rgba(232,180,50,0.18)' : mem.role === 'moderator' ? 'rgba(100,180,255,0.18)' : 'rgba(255,255,255,0.08)'
+              const roleColor = mem.role === 'admin' ? '#f5c842' : mem.role === 'moderator' ? '#64b4ff' : 'rgba(255,255,255,0.5)'
+              const roleLabel = mem.role === 'admin' ? '⭐ Admin' : mem.role === 'moderator' ? '🔧 Moderator' : '👤 Mitglied'
+              return (
+                <View key={mem.user_id} style={styles.memberCard}>
+                  <View style={styles.memberCardTop}>
+                    {/* Avatar */}
+                    {mem.profile?.profile_image_url
+                      ? <Image source={{ uri: mem.profile.profile_image_url }} style={styles.memberPhoto} />
+                      : <View style={[styles.memberPhoto, styles.memberPhotoFallback]}>
+                          <Text style={styles.memberInitial}>{(mem.profile?.name ?? '?').charAt(0).toUpperCase()}</Text>
+                        </View>}
+                    {/* Info */}
+                    <View style={{ flex: 1, marginLeft: 12 }}>
+                      <Text style={styles.memberCardName}>
+                        {mem.profile?.name ?? 'Unbekannt'}{isMe ? ' (du)' : ''}
+                      </Text>
+                      <View style={[styles.roleBadge, { backgroundColor: roleBg }]}>
+                        <Text style={[styles.roleBadgeText, { color: roleColor }]}>{roleLabel}</Text>
+                      </View>
+                    </View>
+                    {/* Remove button — admin only, not self */}
+                    {isAdmin && !isMe && (
+                      <Pressable style={styles.removeBtn} onPress={() =>
+                        Alert.alert(`${mem.profile?.name ?? 'Mitglied'} entfernen?`, '', [
+                          { text: 'Abbrechen', style: 'cancel' },
+                          { text: 'Entfernen', style: 'destructive', onPress: () => removeMember(mem.user_id) },
+                        ])}>
+                        <Text style={styles.removeBtnText}>✕</Text>
+                      </Pressable>
+                    )}
+                  </View>
+
+                  {/* Role buttons — admin only, not self */}
+                  {isAdmin && !isMe && (
+                    <View style={styles.roleButtons}>
+                      <Text style={styles.roleButtonsLabel}>Rolle:</Text>
+                      {(['member', 'moderator', 'admin'] as const).map(r => (
+                        <Pressable key={r}
+                          style={[styles.roleBtn, mem.role === r && styles.roleBtnActive]}
+                          onPress={() => updateMemberRole(mem.user_id, r)}>
+                          <Text style={[styles.roleBtnText, mem.role === r && styles.roleBtnTextActive]}>
+                            {r === 'admin' ? '⭐ Admin' : r === 'moderator' ? '🔧 Mod' : '👤 Mitglied'}
+                          </Text>
+                        </Pressable>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              )
+            })}
+
+            {/* Pending invites */}
+            {group.members.filter(m => m.status === 'invited').length > 0 && (
+              <>
+                <Text style={[styles.sectionLbl, { marginTop: 20 }]}>⏳ Ausstehende Einladungen</Text>
+                {group.members.filter(m => m.status === 'invited').map(mem => (
+                  <View key={mem.user_id} style={styles.inviteRow}>
+                    {mem.profile?.profile_image_url
+                      ? <Image source={{ uri: mem.profile.profile_image_url }} style={styles.memberPhotoSm} />
+                      : <View style={[styles.memberPhotoSm, styles.memberPhotoFallback]}>
+                          <Text style={{ color: '#fff', fontWeight: '800', fontSize: 14 }}>{(mem.profile?.name ?? '?').charAt(0).toUpperCase()}</Text>
+                        </View>}
+                    <Text style={styles.memberName}>{mem.profile?.name ?? 'Unbekannt'}</Text>
+                    {myRole === 'admin' && (
+                      <Pressable onPress={() => removeMember(mem.user_id)} style={styles.removeBtn}>
+                        <Text style={styles.removeBtnText}>✕</Text>
+                      </Pressable>
+                    )}
+                  </View>
+                ))}
+              </>
+            )}
+
+            {/* Invite matches */}
             {canEdit && uninvited.length > 0 && (
               <>
-                <Text style={[styles.sectionLbl, { marginTop: 20 }]}>Matches einladen</Text>
+                <Text style={[styles.sectionLbl, { marginTop: 24 }]}>➕ Matches einladen</Text>
                 {uninvited.map(m => (
                   <Pressable key={m.id} style={styles.inviteRow}
                     onPress={() => inviteMember(m.other_user.id).then(() => Alert.alert('✓', 'Einladung gesendet!'))}>
+                    <View style={[styles.memberPhotoSm, styles.memberPhotoFallback]}>
+                      <Text style={{ color: '#fff', fontWeight: '800', fontSize: 14 }}>{m.other_user.name.charAt(0)}</Text>
+                    </View>
                     <Text style={styles.memberName}>{m.other_user.name}, {m.other_user.age}</Text>
                     <Text style={styles.inviteAction}>Einladen →</Text>
                   </Pressable>
@@ -550,6 +625,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg, paddingTop: 60, paddingBottom: 12,
     borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.12)' },
   back: { fontSize: 26, color: '#fff', width: 32 },
+  // Members tab
+  membersHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 },
+  membersTitle: { fontSize: 18, fontWeight: '900', color: '#fff' },
+  membersBadge: { backgroundColor: 'rgba(232,132,92,0.2)', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 5, borderWidth: 1, borderColor: colors.primary },
+  membersBadgeText: { color: colors.primary, fontWeight: '900', fontSize: 14 },
+  memberCard: { backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 18, padding: 14, marginBottom: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  memberCardTop: { flexDirection: 'row', alignItems: 'center' },
+  memberCardName: { fontSize: 15, fontWeight: '800', color: '#fff', marginBottom: 6 },
+  memberPhoto: { width: 52, height: 52, borderRadius: 26 },
+  memberPhotoSm: { width: 36, height: 36, borderRadius: 18 },
+  memberPhotoFallback: { backgroundColor: 'rgba(232,132,92,0.3)', justifyContent: 'center', alignItems: 'center' },
+  memberInitial: { color: '#fff', fontWeight: '900', fontSize: 20 },
+  roleBadge: { borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start' },
+  roleBadgeText: { fontSize: 12, fontWeight: '800' },
+  removeBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: 'rgba(224,85,85,0.15)', justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: 'rgba(224,85,85,0.3)' },
+  removeBtnText: { color: '#e05555', fontWeight: '900', fontSize: 14 },
+  roleButtons: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
+  roleButtonsLabel: { fontSize: 11, color: 'rgba(255,255,255,0.4)', fontWeight: '700', marginRight: 2 },
+  roleBtn: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)' },
+  roleBtnActive: { backgroundColor: 'rgba(232,132,92,0.2)', borderColor: colors.primary },
+  roleBtnText: { fontSize: 12, fontWeight: '700', color: 'rgba(255,255,255,0.4)' },
+  roleBtnTextActive: { color: '#fff' },
   settingsBtn: { width: 32, height: 32, justifyContent: 'center', alignItems: 'center' },
   settingsIcon: { fontSize: 20, color: 'rgba(255,255,255,0.7)' },
   settingsRoot: { flex: 1, backgroundColor: '#0d1b2e', padding: 24 },
