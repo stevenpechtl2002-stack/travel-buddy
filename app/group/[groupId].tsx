@@ -1,4 +1,5 @@
 import ChatBubble from '@/src/components/ChatBubble'
+import { supabase } from '@/src/lib/supabase'
 import SceneBackground from '@/src/components/SceneBackground'
 import WheelDatePicker from '@/src/components/WheelDatePicker'
 import { colors, gradients, spacing } from '@/src/constants/theme'
@@ -14,8 +15,8 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useRef, useState } from 'react'
 import {
-  ActionSheetIOS, Alert, FlatList, KeyboardAvoidingView,
-  Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
+  ActionSheetIOS, Alert, FlatList, KeyboardAvoidingView, Modal,
+  Platform, Pressable, ScrollView, StyleSheet, Switch, Text, TextInput, View,
 } from 'react-native'
 
 type Tab = 'chat' | 'plan' | 'liste' | 'kosten' | 'abstimmung' | 'mitglieder'
@@ -52,6 +53,9 @@ export default function GroupDetailScreen() {
 
   const [tab, setTab] = useState<Tab>('chat')
   const [input, setInput] = useState('')
+  const [settingsVisible, setSettingsVisible] = useState(false)
+  const [settingsMaxMembers, setSettingsMaxMembers] = useState<number | null>(group?.max_members ?? null)
+  const [settingsGender, setSettingsGender] = useState<'all' | 'male' | 'female'>(group?.allowed_gender ?? 'all')
 
   // Plan
   const [editingPlan, setEditingPlan] = useState(false)
@@ -135,6 +139,18 @@ export default function GroupDetailScreen() {
     }
   }
 
+  const saveSettings = async () => {
+    try {
+      const { error } = await supabase.from('groups').update({
+        max_members: settingsMaxMembers,
+        allowed_gender: settingsGender,
+      }).eq('id', groupId)
+      if (error) throw error
+      setSettingsVisible(false)
+      Alert.alert('✓ Gespeichert')
+    } catch { Alert.alert('Fehler', 'Einstellungen konnten nicht gespeichert werden.') }
+  }
+
   const uninvited = matches.filter(m => !group.members.some(mem => mem.user_id === m.other_user.id))
 
   return (
@@ -145,7 +161,11 @@ export default function GroupDetailScreen() {
         <View style={styles.topBar}>
           <Pressable onPress={() => router.back()}><Text style={styles.back}>‹</Text></Pressable>
           <Text style={styles.headerTitle} numberOfLines={1}>{group.name}</Text>
-          <View style={{ width: 32 }} />
+          {myRole === 'admin'
+            ? <Pressable onPress={() => { setSettingsMaxMembers(group?.max_members ?? null); setSettingsGender(group?.allowed_gender ?? 'all'); setSettingsVisible(true) }} style={styles.settingsBtn}>
+                <Text style={styles.settingsIcon}>⚙</Text>
+              </Pressable>
+            : <View style={{ width: 32 }} />}
         </View>
 
         {/* Scrollable Tabs */}
@@ -462,6 +482,49 @@ export default function GroupDetailScreen() {
         )}
 
       </KeyboardAvoidingView>
+
+      {/* Settings Modal */}
+      <Modal visible={settingsVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setSettingsVisible(false)}>
+        <View style={styles.settingsRoot}>
+          <View style={styles.settingsHandle} />
+          <Text style={styles.settingsTitle}>⚙ Gruppeneinstellungen</Text>
+
+          <Text style={styles.settingsLabel}>Max. Mitglieder</Text>
+          <View style={styles.chipRow}>
+            {([null, 5, 10, 20, 50] as const).map(n => (
+              <Pressable key={String(n)} style={[styles.chip, settingsMaxMembers === n && styles.chipActive]} onPress={() => setSettingsMaxMembers(n)}>
+                <Text style={[styles.chipText, settingsMaxMembers === n && styles.chipTextActive]}>
+                  {n === null ? '∞ Unbegrenzt' : `${n} Personen`}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          <Text style={styles.settingsLabel}>Erlaubtes Geschlecht</Text>
+          <View style={styles.chipRow}>
+            {([['all', '👥 Alle'], ['male', '♂ Männlich'], ['female', '♀ Weiblich']] as const).map(([val, label]) => (
+              <Pressable key={val} style={[styles.chip, settingsGender === val && styles.chipActive]} onPress={() => setSettingsGender(val)}>
+                <Text style={[styles.chipText, settingsGender === val && styles.chipTextActive]}>{label}</Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {/* Current values info */}
+          <View style={styles.settingsInfo}>
+            <Text style={styles.settingsInfoText}>
+              Aktuell: {settingsMaxMembers ? `Max. ${settingsMaxMembers} Mitglieder` : 'Unbegrenzt'} · {settingsGender === 'all' ? 'Alle' : settingsGender === 'male' ? 'Nur Männer' : 'Nur Frauen'}
+            </Text>
+          </View>
+
+          <Pressable style={styles.saveBtn} onPress={saveSettings}>
+            <Text style={styles.saveBtnText}>Speichern</Text>
+          </Pressable>
+          <Pressable style={styles.cancelBtn} onPress={() => setSettingsVisible(false)}>
+            <Text style={styles.cancelBtnText}>Abbrechen</Text>
+          </Pressable>
+        </View>
+      </Modal>
+
     </SceneBackground>
   )
 }
@@ -471,6 +534,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg, paddingTop: 60, paddingBottom: 12,
     borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.12)' },
   back: { fontSize: 26, color: '#fff', width: 32 },
+  settingsBtn: { width: 32, height: 32, justifyContent: 'center', alignItems: 'center' },
+  settingsIcon: { fontSize: 20, color: 'rgba(255,255,255,0.7)' },
+  settingsRoot: { flex: 1, backgroundColor: '#0d1b2e', padding: 24 },
+  settingsHandle: { width: 36, height: 4, borderRadius: 2, backgroundColor: 'rgba(245,240,235,0.2)', alignSelf: 'center', marginBottom: 24 },
+  settingsTitle: { fontSize: 20, fontWeight: '900', color: '#fff', marginBottom: 24 },
+  settingsLabel: { fontSize: 12, fontWeight: '800', color: 'rgba(255,255,255,0.6)', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 10, marginTop: 20 },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.15)' },
+  chipActive: { backgroundColor: 'rgba(232,132,92,0.25)', borderColor: colors.primary },
+  chipText: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.5)' },
+  chipTextActive: { color: '#fff' },
+  settingsInfo: { marginTop: 24, padding: 14, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12 },
+  settingsInfoText: { fontSize: 13, color: 'rgba(255,255,255,0.5)', textAlign: 'center' },
+  saveBtn: { marginTop: 28, backgroundColor: colors.primary, borderRadius: 16, padding: 16, alignItems: 'center' },
+  saveBtnText: { color: '#fff', fontWeight: '900', fontSize: 16 },
+  cancelBtn: { marginTop: 12, padding: 16, alignItems: 'center' },
+  cancelBtnText: { color: 'rgba(255,255,255,0.4)', fontSize: 15 },
   headerTitle: { fontSize: 17, fontWeight: '900', color: '#fff', flex: 1, textAlign: 'center' },
   tabsScroll: { flexGrow: 0, borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   tabsContent: { paddingHorizontal: spacing.md, paddingVertical: 8, gap: 6 },

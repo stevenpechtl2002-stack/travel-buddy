@@ -28,6 +28,8 @@ export default function CreateGroupScreen() {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [isPublic, setIsPublic] = useState(false)
+  const [maxMembers, setMaxMembers] = useState<number | null>(null)
+  const [allowedGender, setAllowedGender] = useState<'all' | 'male' | 'female'>('all')
   const [selectedIds, setSelectedIds] = useState<string[]>(preselectedMatchId ? [preselectedMatchId] : [])
   const [loading, setLoading] = useState(false)
 
@@ -45,6 +47,8 @@ export default function CreateGroupScreen() {
         date_from: dateFrom || null,
         date_to: dateTo || null,
         is_public: isPublic,
+        max_members: maxMembers,
+        allowed_gender: allowedGender,
         created_by: userId,
       }).select().single()
 
@@ -131,6 +135,28 @@ export default function CreateGroupScreen() {
               trackColor={{ true: colors.primary, false: 'rgba(255,255,255,0.15)' }} thumbColor="#fff" />
           </View>
 
+          {/* Max Members */}
+          <Text style={styles.label}>Max. Mitglieder</Text>
+          <View style={styles.chipRow}>
+            {[null, 5, 10, 20, 50].map(n => (
+              <Pressable key={String(n)} style={[styles.chip, maxMembers === n && styles.chipActive]} onPress={() => setMaxMembers(n)}>
+                <Text style={[styles.chipText, maxMembers === n && styles.chipTextActive]}>
+                  {n === null ? '∞ Unbegrenzt' : `${n} Personen`}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {/* Allowed Gender */}
+          <Text style={styles.label}>Geschlecht</Text>
+          <View style={styles.chipRow}>
+            {([['all', '👥 Alle'], ['male', '♂ Männlich'], ['female', '♀ Weiblich']] as const).map(([val, label]) => (
+              <Pressable key={val} style={[styles.chip, allowedGender === val && styles.chipActive]} onPress={() => setAllowedGender(val)}>
+                <Text style={[styles.chipText, allowedGender === val && styles.chipTextActive]}>{label}</Text>
+              </Pressable>
+            ))}
+          </View>
+
           {matches.length > 0 && (
             <>
               <Text style={styles.label}>Matches einladen</Text>
@@ -195,6 +221,11 @@ const styles = StyleSheet.create({
   matchAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: '#e0e0e0',
     justifyContent: 'center', alignItems: 'center' },
   matchName: { flex: 1, fontSize: 15, fontWeight: '700', color: '#1a1a2e' },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.15)' },
+  chipActive: { backgroundColor: 'rgba(232,132,92,0.25)', borderColor: colors.primary },
+  chipText: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.6)' },
+  chipTextActive: { color: '#fff' },
   createBtn: { marginTop: 28, borderRadius: 50, overflow: 'hidden' },
   createBtnGrad: { padding: 17, alignItems: 'center' },
   createBtnText: { color: '#fff', fontWeight: '900', fontSize: 16 },
