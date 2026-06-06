@@ -138,13 +138,14 @@ function PostCard({ post, currentUserId, onLike, onRepost, onDelete }: {
 }
 
 // ── Feed Tab Bar ──────────────────────────────────────────────
-function FeedTabBar({ active }: { active: 'home' | 'chat' | 'search' | 'profile' }) {
+function FeedTabBar({ active }: { active: 'home' | 'chat' | 'discover' | 'search' | 'profile' }) {
   const router = useRouter()
   const tabs = [
-    { key: 'home',    icon: '⌂',  label: 'Home',    route: '/feed' },
-    { key: 'chat',    icon: '💬', label: 'Chat',    route: '/chats' },
-    { key: 'search',  icon: '⊙',  label: 'Suchen',  route: '/explore' },
-    { key: 'profile', icon: '◯',  label: 'Profil',  route: '/feed-profile' },
+    { key: 'home',     icon: '⌂',  label: 'Home',      route: '/feed',              center: false },
+    { key: 'chat',     icon: '💬', label: 'Chat',      route: '/chats',             center: false },
+    { key: 'discover', icon: '✦',  label: 'Entdecken', route: '/(tabs)/discover',   center: true  },
+    { key: 'search',   icon: '⊙',  label: 'Suchen',    route: '/explore',           center: false },
+    { key: 'profile',  icon: '◯',  label: 'Profil',    route: '/feed-profile',      center: false },
   ] as const
 
   return (
@@ -152,6 +153,19 @@ function FeedTabBar({ active }: { active: 'home' | 'chat' | 'search' | 'profile'
       <View style={navStyles.glow} />
       {tabs.map(tab => {
         const focused = active === tab.key
+        if (tab.center) {
+          return (
+            <Pressable key={tab.key} style={navStyles.tab}
+              onPress={() => router.push(tab.route as any)}>
+              <View style={navStyles.discoverWrap}>
+                <LinearGradient colors={gradients.brand} style={navStyles.discoverBtn}>
+                  <Text style={navStyles.discoverIcon}>{tab.icon}</Text>
+                </LinearGradient>
+              </View>
+              <Text style={[navStyles.label, navStyles.discoverLabel]}>{tab.label}</Text>
+            </Pressable>
+          )
+        }
         return (
           <Pressable
             key={tab.key}
@@ -188,6 +202,18 @@ const navStyles = StyleSheet.create({
     backgroundColor: 'rgba(232,132,92,0.2)',
   },
   tab: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 4 },
+  // Center Entdecken button
+  discoverWrap: {
+    shadowColor: '#e8845c', shadowOpacity: 0.5, shadowRadius: 10, elevation: 8,
+    marginTop: -16,
+  },
+  discoverBtn: {
+    width: 52, height: 52, borderRadius: 26,
+    justifyContent: 'center', alignItems: 'center',
+    borderWidth: 3, borderColor: '#111d2e',
+  },
+  discoverIcon: { fontSize: 22, color: '#fff', fontWeight: '900' },
+  discoverLabel: { color: colors.primary, fontWeight: '800', marginTop: 2 },
   pill: {
     width: 44, height: 36, borderRadius: 18,
     justifyContent: 'center', alignItems: 'center',

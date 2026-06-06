@@ -10,29 +10,36 @@ import {
   ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native'
 
-// ── Bottom Tab Bar (same as feed) ────────────────────────────
+// ── Bottom Tab Bar ────────────────────────────────────────────
 function ExploreTabBar() {
   const router = useRouter()
   const tabs = [
-    { key: 'home',    icon: '⌂',  label: 'Home',    route: '/feed' },
-    { key: 'chat',    icon: '💬', label: 'Chat',    route: '/chats' },
-    { key: 'search',  icon: '⊙',  label: 'Suchen',  route: '/explore' },
-    { key: 'profile', icon: '◯',  label: 'Profil',  route: '/feed-profile' },
+    { key: 'home',     icon: '⌂',  label: 'Home',      route: '/feed',            center: false },
+    { key: 'chat',     icon: '💬', label: 'Chat',      route: '/chats',           center: false },
+    { key: 'discover', icon: '✦',  label: 'Entdecken', route: '/(tabs)/discover', center: true  },
+    { key: 'search',   icon: '⊙',  label: 'Suchen',    route: '/explore',         center: false },
+    { key: 'profile',  icon: '◯',  label: 'Profil',    route: '/feed-profile',    center: false },
   ] as const
   return (
     <View style={navStyles.wrapper}>
       <View style={navStyles.glow} />
       {tabs.map(tab => {
         const focused = tab.key === 'search'
+        if (tab.center) return (
+          <Pressable key={tab.key} style={navStyles.tab} onPress={() => router.push(tab.route as any)}>
+            <View style={navStyles.discoverWrap}>
+              <LinearGradient colors={gradients.brand} style={navStyles.discoverBtn}>
+                <Text style={navStyles.discoverIcon}>{tab.icon}</Text>
+              </LinearGradient>
+            </View>
+            <Text style={[navStyles.label, navStyles.discoverLabel]}>{tab.label}</Text>
+          </Pressable>
+        )
         return (
           <Pressable key={tab.key} style={navStyles.tab} onPress={() => router.push(tab.route as any)}>
-            {focused ? (
-              <LinearGradient colors={gradients.brand} style={navStyles.pill}>
-                <Text style={navStyles.activeIcon}>{tab.icon}</Text>
-              </LinearGradient>
-            ) : (
-              <Text style={navStyles.inactiveIcon}>{tab.icon}</Text>
-            )}
+            {focused
+              ? <LinearGradient colors={gradients.brand} style={navStyles.pill}><Text style={navStyles.activeIcon}>{tab.icon}</Text></LinearGradient>
+              : <Text style={navStyles.inactiveIcon}>{tab.icon}</Text>}
             <Text style={[navStyles.label, focused && navStyles.labelActive]}>{tab.label}</Text>
           </Pressable>
         )
@@ -50,6 +57,10 @@ const navStyles = StyleSheet.create({
   },
   glow: { position: 'absolute', top: 0, left: '15%', right: '15%', height: 1, backgroundColor: 'rgba(232,132,92,0.2)' },
   tab: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 4 },
+  discoverWrap: { shadowColor: '#e8845c', shadowOpacity: 0.5, shadowRadius: 10, elevation: 8, marginTop: -16 },
+  discoverBtn: { width: 52, height: 52, borderRadius: 26, justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: '#111d2e' },
+  discoverIcon: { fontSize: 22, color: '#fff', fontWeight: '900' },
+  discoverLabel: { color: '#e8845c', fontWeight: '800', marginTop: 2 },
   pill: { width: 44, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
   activeIcon: { fontSize: 20, color: '#fff', fontWeight: '700' },
   inactiveIcon: { fontSize: 20, color: 'rgba(245,240,235,0.28)' },
