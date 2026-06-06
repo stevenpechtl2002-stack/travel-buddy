@@ -9,7 +9,8 @@ import * as FileSystem from 'expo-file-system/legacy'
 import * as ImagePicker from 'expo-image-picker'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useFocusEffect } from 'expo-router'
 import {
   ActionSheetIOS, ActivityIndicator, Alert, Animated, Dimensions,
   FlatList, Image, KeyboardAvoidingView, Modal, Platform,
@@ -357,6 +358,10 @@ export default function FeedScreen() {
     supabase.from('profiles').select('name, profile_image_url').eq('id', userId).single()
       .then(({ data }) => { if (data) setMyProfile(data) })
   }, [userId])
+
+  useFocusEffect(useCallback(() => {
+    if (userId) load(true)
+  }, [userId, load]))
 
   const handleAddStory = async (localUri: string, caption: string | null) => {
     const ext = localUri.split('?')[0].split('.').pop()?.toLowerCase() ?? 'jpg'
