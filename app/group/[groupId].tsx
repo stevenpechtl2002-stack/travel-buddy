@@ -1,4 +1,5 @@
 import ChatBubble from '@/src/components/ChatBubble'
+import NumberWheelPicker from '@/src/components/NumberWheelPicker'
 import { supabase } from '@/src/lib/supabase'
 import SceneBackground from '@/src/components/SceneBackground'
 import WheelDatePicker from '@/src/components/WheelDatePicker'
@@ -56,6 +57,7 @@ export default function GroupDetailScreen() {
   const [settingsVisible, setSettingsVisible] = useState(false)
   const [settingsMaxMembers, setSettingsMaxMembers] = useState<number | null>(group?.max_members ?? null)
   const [settingsGender, setSettingsGender] = useState<'all' | 'male' | 'female'>(group?.allowed_gender ?? 'all')
+  const [settingsReligion, setSettingsReligion] = useState<string>(group?.allowed_religion ?? 'all')
 
   // Plan
   const [editingPlan, setEditingPlan] = useState(false)
@@ -144,6 +146,7 @@ export default function GroupDetailScreen() {
       const { error } = await supabase.from('groups').update({
         max_members: settingsMaxMembers,
         allowed_gender: settingsGender,
+        allowed_religion: settingsReligion,
       }).eq('id', groupId)
       if (error) throw error
       setSettingsVisible(false)
@@ -490,17 +493,20 @@ export default function GroupDetailScreen() {
           <Text style={styles.settingsTitle}>⚙ Gruppeneinstellungen</Text>
 
           <Text style={styles.settingsLabel}>Max. Mitglieder</Text>
-          <View style={styles.chipRow}>
-            {([null, 5, 10, 20, 50] as const).map(n => (
-              <Pressable key={String(n)} style={[styles.chip, settingsMaxMembers === n && styles.chipActive]} onPress={() => setSettingsMaxMembers(n)}>
-                <Text style={[styles.chipText, settingsMaxMembers === n && styles.chipTextActive]}>
-                  {n === null ? '∞ Unbegrenzt' : `${n} Personen`}
-                </Text>
-              </Pressable>
-            ))}
+          <View style={styles.maxMembersRow}>
+            <View style={styles.chipCol}>
+              {([null, 5, 10, 20, 50] as const).map(n => (
+                <Pressable key={String(n)} style={[styles.chip, settingsMaxMembers === n && styles.chipActive]} onPress={() => setSettingsMaxMembers(n)}>
+                  <Text style={[styles.chipText, settingsMaxMembers === n && styles.chipTextActive]}>
+                    {n === null ? '∞ Unbegrenzt' : `${n} Personen`}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+            <NumberWheelPicker value={settingsMaxMembers ?? 10} onChange={n => setSettingsMaxMembers(n)} />
           </View>
 
-          <Text style={styles.settingsLabel}>Erlaubtes Geschlecht</Text>
+          <Text style={styles.settingsLabel}>Geschlecht</Text>
           <View style={styles.chipRow}>
             {([['all', '👥 Alle'], ['male', '♂ Männlich'], ['female', '♀ Weiblich']] as const).map(([val, label]) => (
               <Pressable key={val} style={[styles.chip, settingsGender === val && styles.chipActive]} onPress={() => setSettingsGender(val)}>
@@ -509,11 +515,21 @@ export default function GroupDetailScreen() {
             ))}
           </View>
 
-          {/* Current values info */}
-          <View style={styles.settingsInfo}>
-            <Text style={styles.settingsInfoText}>
-              Aktuell: {settingsMaxMembers ? `Max. ${settingsMaxMembers} Mitglieder` : 'Unbegrenzt'} · {settingsGender === 'all' ? 'Alle' : settingsGender === 'male' ? 'Nur Männer' : 'Nur Frauen'}
-            </Text>
+          <Text style={styles.settingsLabel}>Religion</Text>
+          <View style={styles.chipRow}>
+            {[
+              ['all', '🌍 Alle'],
+              ['christian', '✝️ Christlich'],
+              ['muslim', '☪️ Islamisch'],
+              ['hindu', '🕉 Hinduistisch'],
+              ['buddhist', '☸️ Buddhistisch'],
+              ['jewish', '✡️ Jüdisch'],
+              ['none', '⚪ Keine'],
+            ].map(([val, label]) => (
+              <Pressable key={val} style={[styles.chip, settingsReligion === val && styles.chipActive]} onPress={() => setSettingsReligion(val)}>
+                <Text style={[styles.chipText, settingsReligion === val && styles.chipTextActive]}>{label}</Text>
+              </Pressable>
+            ))}
           </View>
 
           <Pressable style={styles.saveBtn} onPress={saveSettings}>
@@ -541,6 +557,8 @@ const styles = StyleSheet.create({
   settingsTitle: { fontSize: 20, fontWeight: '900', color: '#fff', marginBottom: 24 },
   settingsLabel: { fontSize: 12, fontWeight: '800', color: 'rgba(255,255,255,0.6)', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 10, marginTop: 20 },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  maxMembersRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  chipCol: { flex: 1, gap: 8 },
   chip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.15)' },
   chipActive: { backgroundColor: 'rgba(232,132,92,0.25)', borderColor: colors.primary },
   chipText: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.5)' },

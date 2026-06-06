@@ -1,5 +1,6 @@
 import SceneBackground from '@/src/components/SceneBackground'
 import WheelDatePicker from '@/src/components/WheelDatePicker'
+import NumberWheelPicker from '@/src/components/NumberWheelPicker'
 import { colors, gradients, spacing } from '@/src/constants/theme'
 import { useAuth } from '@/src/hooks/useAuth'
 import { useMatches } from '@/src/hooks/useMatches'
@@ -30,6 +31,7 @@ export default function CreateGroupScreen() {
   const [isPublic, setIsPublic] = useState(false)
   const [maxMembers, setMaxMembers] = useState<number | null>(null)
   const [allowedGender, setAllowedGender] = useState<'all' | 'male' | 'female'>('all')
+  const [allowedReligion, setAllowedReligion] = useState('all')
   const [selectedIds, setSelectedIds] = useState<string[]>(preselectedMatchId ? [preselectedMatchId] : [])
   const [loading, setLoading] = useState(false)
 
@@ -49,6 +51,7 @@ export default function CreateGroupScreen() {
         is_public: isPublic,
         max_members: maxMembers,
         allowed_gender: allowedGender,
+        allowed_religion: allowedReligion,
         created_by: userId,
       }).select().single()
 
@@ -137,14 +140,17 @@ export default function CreateGroupScreen() {
 
           {/* Max Members */}
           <Text style={styles.label}>Max. Mitglieder</Text>
-          <View style={styles.chipRow}>
-            {[null, 5, 10, 20, 50].map(n => (
-              <Pressable key={String(n)} style={[styles.chip, maxMembers === n && styles.chipActive]} onPress={() => setMaxMembers(n)}>
-                <Text style={[styles.chipText, maxMembers === n && styles.chipTextActive]}>
-                  {n === null ? '∞ Unbegrenzt' : `${n} Personen`}
-                </Text>
-              </Pressable>
-            ))}
+          <View style={styles.maxMembersRow}>
+            <View style={styles.chipCol}>
+              {[null, 5, 10, 20, 50].map(n => (
+                <Pressable key={String(n)} style={[styles.chip, maxMembers === n && styles.chipActive]} onPress={() => setMaxMembers(n)}>
+                  <Text style={[styles.chipText, maxMembers === n && styles.chipTextActive]}>
+                    {n === null ? '∞ Unbegrenzt' : `${n} Personen`}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+            <NumberWheelPicker value={maxMembers ?? 10} onChange={n => setMaxMembers(n)} />
           </View>
 
           {/* Allowed Gender */}
@@ -153,6 +159,24 @@ export default function CreateGroupScreen() {
             {([['all', '👥 Alle'], ['male', '♂ Männlich'], ['female', '♀ Weiblich']] as const).map(([val, label]) => (
               <Pressable key={val} style={[styles.chip, allowedGender === val && styles.chipActive]} onPress={() => setAllowedGender(val)}>
                 <Text style={[styles.chipText, allowedGender === val && styles.chipTextActive]}>{label}</Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {/* Allowed Religion */}
+          <Text style={styles.label}>Religion</Text>
+          <View style={styles.chipRow}>
+            {[
+              ['all', '🌍 Alle'],
+              ['christian', '✝️ Christlich'],
+              ['muslim', '☪️ Islamisch'],
+              ['hindu', '🕉 Hinduistisch'],
+              ['buddhist', '☸️ Buddhistisch'],
+              ['jewish', '✡️ Jüdisch'],
+              ['none', '⚪ Keine'],
+            ].map(([val, label]) => (
+              <Pressable key={val} style={[styles.chip, allowedReligion === val && styles.chipActive]} onPress={() => setAllowedReligion(val)}>
+                <Text style={[styles.chipText, allowedReligion === val && styles.chipTextActive]}>{label}</Text>
               </Pressable>
             ))}
           </View>
@@ -222,6 +246,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center' },
   matchName: { flex: 1, fontSize: 15, fontWeight: '700', color: '#1a1a2e' },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  maxMembersRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  chipCol: { flex: 1, gap: 8 },
   chip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.15)' },
   chipActive: { backgroundColor: 'rgba(232,132,92,0.25)', borderColor: colors.primary },
   chipText: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.6)' },
