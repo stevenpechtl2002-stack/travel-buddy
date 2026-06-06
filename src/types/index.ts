@@ -8,7 +8,10 @@ export interface Profile {
   age: number
   country: string
   bio: string
+  tagline: string | null
+  religion: string | null
   profile_image_url: string | null
+  photo_urls: string[] | null
   travel_style: TravelStyle | null
   languages: string[]
   verified: boolean

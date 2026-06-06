@@ -57,7 +57,15 @@ export default function ProfilePreviewModal({ visible, data, onClose }: Props) {
 
               {/* Info overlay */}
               <LinearGradient colors={['transparent', 'rgba(0,0,0,0.88)']} style={styles.overlay}>
-                <Text style={styles.name}>{data.name || 'Dein Name'}, 25</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                  <Text style={styles.name}>{data.name || 'Dein Name'}, 25</Text>
+                  {data.religion ? (
+                    <View style={{ backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 12, width: 28, height: 28, justifyContent: 'center', alignItems: 'center' }}>
+                      <Text style={{ fontSize: 16 }}>{{ 'Christlich': '✝️', 'Islamisch': '☪️', 'Hinduistisch': '🕉', 'Buddhistisch': '☸️', 'Jüdisch': '✡️', 'Andere': '🌍', 'Keine': '⚪' }[data.religion] ?? '🌍'}</Text>
+                    </View>
+                  ) : null}
+                </View>
+                {data.tagline ? <Text style={{ fontSize: 12, color: 'rgba(255,255,255,0.75)', fontStyle: 'italic', marginBottom: 6 }}>{data.tagline}</Text> : null}
 
                 {data.destinations.length > 0 && (
                   <View style={styles.destRow}>
@@ -107,6 +115,13 @@ export default function ProfilePreviewModal({ visible, data, onClose }: Props) {
               <View style={styles.section}>
                 <Text style={styles.sectionLabel}>💬 ÜBER MICH</Text>
                 <Text style={styles.sectionText}>"{data.bio}"</Text>
+              </View>
+            ) : null}
+
+            {data.religion && data.religion !== 'Keine' ? (
+              <View style={styles.section}>
+                <Text style={styles.sectionLabel}>🕊 RELIGION</Text>
+                <Text style={styles.sectionText}>{{ 'Christlich': '✝️', 'Islamisch': '☪️', 'Hinduistisch': '🕉', 'Buddhistisch': '☸️', 'Jüdisch': '✡️', 'Andere': '🌍' }[data.religion] ?? ''} {data.religion}</Text>
               </View>
             ) : null}
 

@@ -2,6 +2,16 @@ import { colors, gradients, radius, spacing } from '../constants/theme'
 import { Profile, TravelDestination, UserInterest } from '../types'
 import { Dimensions, Image, Pressable, StyleSheet, Text, View } from 'react-native'
 
+const RELIGION_ICONS: Record<string, string> = {
+  'Christlich': '✝️',
+  'Islamisch': '☪️',
+  'Hinduistisch': '🕉',
+  'Buddhistisch': '☸️',
+  'Jüdisch': '✡️',
+  'Andere': '🌍',
+  'Keine': '⚪',
+}
+
 const DEMO_IMAGES: Record<string, any> = {
   'demo-1':  require('../../assets/demo/laura.jpg'),
   'demo-2':  require('../../assets/demo/max.jpg'),
@@ -175,7 +185,18 @@ const SwipeCard = forwardRef<SwipeCardRef, Props>(function SwipeCard(
           colors={['transparent', 'rgba(0,0,0,0.85)']}
           style={styles.overlay}
         >
-          <Text style={styles.name}>{profile.name}, {profile.age}</Text>
+          {/* Name + Religion icon */}
+          <View style={styles.nameRow}>
+            <Text style={styles.name}>{profile.name}, {profile.age}</Text>
+            {profile.religion ? (
+              <View style={styles.religionBadge}>
+                <Text style={styles.religionIcon}>{RELIGION_ICONS[profile.religion] ?? '🌍'}</Text>
+              </View>
+            ) : null}
+          </View>
+
+          {/* Tagline */}
+          {profile.tagline ? <Text style={styles.tagline}>{profile.tagline}</Text> : null}
 
           {destinations.length > 0 && (
             <View style={styles.destinations}>
@@ -244,7 +265,7 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '20deg' }],
   },
   nopeLabelText: { fontSize: 28, fontWeight: '900', color: '#F44336', letterSpacing: 2 },
-  name: { fontSize: 28, fontWeight: 'bold', color: '#fff', marginBottom: spacing.sm },
+  name: { fontSize: 28, fontWeight: 'bold', color: '#fff' },
   destinations: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: spacing.sm },
   destChip: { backgroundColor: 'rgba(232,132,92,0.85)', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
   destText: { color: '#fff', fontSize: 13, fontWeight: '600' },
@@ -252,6 +273,10 @@ const styles = StyleSheet.create({
   interestChip: { backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4 },
   interestText: { color: '#fff', fontSize: 12 },
   bio: { fontSize: 14, color: 'rgba(255,255,255,0.85)', fontStyle: 'italic' },
+  nameRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  religionBadge: { backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 12, width: 28, height: 28, justifyContent: 'center', alignItems: 'center' },
+  religionIcon: { fontSize: 16 },
+  tagline: { fontSize: 13, color: 'rgba(255,255,255,0.75)', fontStyle: 'italic', marginBottom: 6 },
   infoBtn: { position: 'absolute', top: 14, right: 14, borderRadius: 20, overflow: 'hidden' },
   infoBtnGrad: {
     paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
