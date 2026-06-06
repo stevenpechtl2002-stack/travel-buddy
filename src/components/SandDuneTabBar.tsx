@@ -70,7 +70,7 @@ export default function SandDuneTabBar({ state, descriptors, navigation }: Botto
       <LinearGradient colors={['#1a2a3e', '#111d2e']} style={styles.bar}>
         {/* Top separator glow */}
         <View style={styles.glow} />
-        {state.routes.filter(route => route.name !== 'premium').map((route, index) => {
+        {state.routes.filter(route => route.name !== 'premium' && route.name !== 'profile').map((route, index) => {
           const focused = state.index === index
           const icon = TAB_ICONS[route.name] ?? '●'
           const label = TAB_LABELS[route.name] ?? route.name
