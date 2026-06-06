@@ -212,7 +212,7 @@ export default function DiscoverScreen() {
           <Text style={styles.searchBtnText}>Suchen</Text>
         </Pressable>
 
-        {/* Filter + Live rechts */}
+        {/* Filter + Profil rechts */}
         <View style={styles.headerRight}>
           <Pressable style={styles.filterBtn} onPress={() => setFilterVisible(true)}>
             {activeFilterCount > 0 && (
@@ -222,10 +222,9 @@ export default function DiscoverScreen() {
             )}
             <Text style={styles.filterIcon}>⚙</Text>
           </Pressable>
-          <View style={styles.onlinePill}>
-            <View style={styles.greenDot} />
-            <Text style={styles.onlineText}>Live</Text>
-          </View>
+          <Pressable style={styles.profileBtn} onPress={() => router.push('/feed-profile')}>
+            <Text style={styles.profileBtnIcon}>◯</Text>
+          </Pressable>
         </View>
       </View>
 
@@ -326,12 +325,10 @@ const styles = StyleSheet.create({
     borderRadius: 8, minWidth: 16, height: 16, justifyContent: 'center', alignItems: 'center',
     zIndex: 1, paddingHorizontal: 3 },
   filterBadgeText: { color: '#fff', fontSize: 9, fontWeight: '900' },
-  onlinePill: { flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: 'rgba(245,240,235,0.1)', borderRadius: 50,
-    paddingHorizontal: 8, paddingVertical: 5,
+  profileBtn: { width: 36, height: 36, borderRadius: 12,
+    backgroundColor: 'rgba(245,240,235,0.1)', justifyContent: 'center', alignItems: 'center',
     borderWidth: 1, borderColor: 'rgba(245,240,235,0.18)' },
-  greenDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#4ade80' },
-  onlineText: { fontSize: 11, fontWeight: '700', color: colors.text },
+  profileBtnIcon: { fontSize: 18, color: colors.text },
   cardWrapper: { flex: 1, paddingHorizontal: spacing.lg, justifyContent: 'flex-start', paddingTop: 4, zIndex: 10 },
   buttons: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center',
     paddingTop: 16, gap: 40, zIndex: 10 },
