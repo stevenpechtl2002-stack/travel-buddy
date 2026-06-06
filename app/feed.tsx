@@ -1,13 +1,15 @@
-import SceneBackground from '@/src/components/SceneBackground'
+import StoriesBar from '@/src/components/StoriesBar'
+import StoryViewer from '@/src/components/StoryViewer'
 import { colors, gradients, spacing } from '@/src/constants/theme'
 import { useAuth } from '@/src/hooks/useAuth'
 import { FeedPost, useFeed } from '@/src/hooks/useFeed'
+import { useStories } from '@/src/hooks/useStories'
 import { supabase } from '@/src/lib/supabase'
-import * as ImagePicker from 'expo-image-picker'
 import * as FileSystem from 'expo-file-system/legacy'
+import * as ImagePicker from 'expo-image-picker'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   ActionSheetIOS, ActivityIndicator, Alert, Animated, Dimensions,
   FlatList, Image, KeyboardAvoidingView, Modal, Platform,
@@ -243,8 +245,43 @@ export default function FeedScreen() {
   const { session } = useAuth()
   const userId = session?.user.id ?? ''
   const { posts, loading, refreshing, load, createPost, toggleLike, repost, deletePost } = useFeed(userId)
+  const { groups, seenIds, load: loadStories, addStory, markSeen } = useStories(userId)
   const router = useRouter()
   const [composeVisible, setComposeVisible] = useState(false)
+  const [storyViewerVisible, setStoryViewerVisible] = useState(false)
+  const [storyStartIndex, setStoryStartIndex] = useState(0)
+  const [myProfile, setMyProfile] = useState<{ name: string; profile_image_url: string | null }>({
+    name: '?', profile_image_url: null,
+  })
+
+  useEffect(() => {
+    if (!userId) return
+    supabase.from('profiles').select('name, profile_image_url').eq('id', userId).single()
+      .then(({ data }) => { if (data) setMyProfile(data) })
+  }, [userId])
+
+  const handleAddStory = async (localUri: string, caption: string | null) => {
+    const ext = localUri.split('?')[0].split('.').pop()?.toLowerCase() ?? 'jpg'
+    const mime = ext === 'png' ? 'image/png' : 'image/jpeg'
+    const filename = `stories/${userId}/${Date.now()}.${ext}`
+    const { data: { session: s } } = await supabase.auth.getSession()
+    const token = s?.access_token
+    if (!token) throw new Error('Nicht eingeloggt')
+    const uploadUrl = `${SUPABASE_URL}/storage/v1/object/profile-images/${filename}`
+    const result = await FileSystem.uploadAsync(uploadUrl, localUri, {
+      httpMethod: 'POST',
+      uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': mime, 'x-upsert': 'true' },
+    })
+    if (result.status < 200 || result.status >= 300) throw new Error(`Upload ${result.status}`)
+    const { data: pub } = supabase.storage.from('profile-images').getPublicUrl(filename)
+    await addStory(pub.publicUrl, caption)
+  }
+
+  const openStory = (groupIndex: number) => {
+    setStoryStartIndex(groupIndex)
+    setStoryViewerVisible(true)
+  }
 
   const handleDelete = (postId: string) => {
     if (Platform.OS === 'ios') {
@@ -285,8 +322,19 @@ export default function FeedScreen() {
           keyExtractor={p => p.id}
           contentContainerStyle={styles.feed}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={() => load(true)}
+            <RefreshControl refreshing={refreshing} onRefresh={() => { load(true); loadStories() }}
               tintColor={colors.primary} colors={[colors.primary]} />
+          }
+          ListHeaderComponent={
+            <StoriesBar
+              groups={groups}
+              myUserId={userId}
+              myName={myProfile.name}
+              myPhotoUrl={myProfile.profile_image_url}
+              seenIds={seenIds}
+              onOpenStory={openStory}
+              onAddStory={handleAddStory}
+            />
           }
           ListEmptyComponent={
             <View style={styles.empty}>
@@ -324,6 +372,14 @@ export default function FeedScreen() {
         userId={userId}
         onClose={() => setComposeVisible(false)}
         onCreate={createPost}
+      />
+
+      <StoryViewer
+        groups={groups}
+        startGroupIndex={storyStartIndex}
+        visible={storyViewerVisible}
+        onClose={() => setStoryViewerVisible(false)}
+        onSeen={markSeen}
       />
     </View>
   )
