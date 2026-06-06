@@ -468,7 +468,7 @@ export default function FeedProfileScreen() {
         userId={userId}
         type={composeType}
         onClose={() => setComposeVisible(false)}
-        onDone={(goToFeed) => { load(); if (goToFeed) router.push('/feed') }}
+        onDone={(goToFeed) => { load(); if (goToFeed) router.push('/threads') }}
       />
     </View>
   )

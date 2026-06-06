@@ -522,9 +522,9 @@ export default function FeedScreen() {
           <Text style={styles.backText}>‹</Text>
         </Pressable>
         <Text style={styles.topBarTitle}>Travel Feed</Text>
-        <Pressable style={styles.composeBtn} onPress={() => setComposeVisible(true)}>
+        <Pressable style={styles.composeBtn} onPress={() => router.push('/threads')}>
           <LinearGradient colors={gradients.brand} style={styles.composeBtnGrad}>
-            <Text style={styles.composeBtnText}>+ Post</Text>
+            <Text style={styles.composeBtnText}>✍️ Threads</Text>
           </LinearGradient>
         </Pressable>
       </LinearGradient>
