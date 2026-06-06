@@ -9,6 +9,7 @@ export interface ProfileData {
   tagline: string
   bio: string
   travelStyle: string
+  religion: string
   destinations: { flag: string; name: string }[]
   interests: string[]
   images: string[]
@@ -385,6 +386,35 @@ export default function ProfileEditModal({ visible, data, onChange, onClose }: P
               multiline
               numberOfLines={3}
             />
+          </View>
+
+          {/* Religion */}
+          <View style={styles.section}>
+            <Text style={styles.label}>RELIGION</Text>
+            <View style={styles.chips}>
+              {[
+                { icon: '⚪', label: 'Keine' },
+                { icon: '✝️', label: 'Christlich' },
+                { icon: '☪️', label: 'Islamisch' },
+                { icon: '🕉', label: 'Hinduistisch' },
+                { icon: '☸️', label: 'Buddhistisch' },
+                { icon: '✡️', label: 'Jüdisch' },
+                { icon: '🌍', label: 'Andere' },
+              ].map(r => {
+                const active = data.religion === r.label
+                return (
+                  <Pressable key={r.label} onPress={() => set({ religion: r.label })}>
+                    {active
+                      ? <LinearGradient colors={gradients.brandH} style={styles.chipActive}>
+                          <Text style={styles.chipActiveText}>{r.icon} {r.label}</Text>
+                        </LinearGradient>
+                      : <View style={styles.chip}>
+                          <Text style={styles.chipText}>{r.icon} {r.label}</Text>
+                        </View>}
+                  </Pressable>
+                )
+              })}
+            </View>
           </View>
 
           {/* Travel Style */}

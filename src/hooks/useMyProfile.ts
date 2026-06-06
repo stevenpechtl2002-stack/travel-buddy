@@ -13,6 +13,7 @@ const EMPTY_PROFILE: ProfileData = {
   tagline: '✈ Solo Traveler · Abenteurer',
   bio: 'Solo-Reisende auf der Suche nach Abenteuern und Gleichgesinnten 🌏',
   travelStyle: 'Adventure',
+  religion: '',
   destinations: [
     { flag: '🇹🇭', name: 'Bangkok' },
     { flag: '🇮🇩', name: 'Bali' },
@@ -75,6 +76,7 @@ export function useMyProfile(userId: string) {
             tagline: (p as any).tagline ?? EMPTY_PROFILE.tagline,
             bio: p.bio ?? EMPTY_PROFILE.bio,
             travelStyle: p.travel_style ?? EMPTY_PROFILE.travelStyle,
+            religion: (p as any).religion ?? '',
             destinations: (dests ?? []).map((d: any) => ({ flag: d.flag ?? '🌍', name: d.city ?? d.country })),
             interests: (ints ?? []).map((i: any) => i.interest),
             images: (p as any).photo_urls ?? (p.profile_image_url ? [p.profile_image_url] : []),
@@ -132,6 +134,7 @@ export function useMyProfile(userId: string) {
           profile_image_url: remoteImages[0] ?? null,
           photo_urls: remoteImages,
           tagline: data.tagline,
+          religion: data.religion || null,
         } as any, { onConflict: 'id' })
 
         if (upsertError) console.warn('Profile upsert error:', upsertError.message)
