@@ -130,7 +130,7 @@ function ComposeModal({ visible, userId, type, onClose, onDone }: {
     try {
       let imgUrl: string | null = null
       if (imageUri) imgUrl = await uploadImage(imageUri)
-      await supabase.from('posts').insert({
+      const { error: insertError } = await supabase.from('posts').insert({
         user_id: userId,
         content: text.trim() || null,
         image_url: imgUrl,
@@ -138,6 +138,7 @@ function ComposeModal({ visible, userId, type, onClose, onDone }: {
         type: 'post',
         like_count: 0, repost_count: 0, comment_count: 0,
       })
+      if (insertError) throw new Error(insertError.message)
       reset(); onClose(); onDone(type === 'thread')
     } catch (e: any) {
       Alert.alert('Fehler', e.message)
