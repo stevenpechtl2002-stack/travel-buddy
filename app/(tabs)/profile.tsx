@@ -16,12 +16,24 @@ export default function ProfileScreen() {
   const { profile, loading, saving, uploadError, clearUploadError, save } = useMyProfile(userId)
   const [editVisible, setEditVisible] = useState(false)
   const [previewVisible, setPreviewVisible] = useState(false)
+  const [swipeStats, setSwipeStats] = useState({ likes: 0, dislikes: 0 })
   const router = useRouter()
 
   // Show upload errors as an alert whenever they appear
   if (uploadError) {
     Alert.alert('Foto-Upload', uploadError, [{ text: 'OK', onPress: clearUploadError }])
   }
+
+  useState(() => {
+    if (!userId) return
+    supabase.from('swipes').select('direction').eq('swiper_id', userId).then(({ data }) => {
+      if (!data) return
+      setSwipeStats({
+        likes: data.filter(s => s.direction === 'right').length,
+        dislikes: data.filter(s => s.direction === 'left').length,
+      })
+    })
+  })
 
   const handleSignOut = () => {
     Alert.alert('Ausloggen', 'Möchtest du dich wirklich ausloggen?', [
@@ -90,6 +102,27 @@ export default function ProfileScreen() {
           <View style={styles.stat}>
             <Text style={styles.statNum}>{profile.interests.length}</Text>
             <Text style={styles.statLabel}>Interessen</Text>
+          </View>
+        </View>
+
+        {/* Swipe stats */}
+        <View style={styles.swipeRow}>
+          <View style={styles.swipeStat}>
+            <Text style={styles.swipeIcon}>♥</Text>
+            <Text style={styles.swipeNum}>{swipeStats.likes}</Text>
+            <Text style={styles.swipeLabel}>Likes</Text>
+          </View>
+          <View style={styles.swipeDivider} />
+          <View style={styles.swipeStat}>
+            <Text style={styles.swipeIcon}>✕</Text>
+            <Text style={styles.swipeNum}>{swipeStats.dislikes}</Text>
+            <Text style={styles.swipeLabel}>Dislikes</Text>
+          </View>
+          <View style={styles.swipeDivider} />
+          <View style={styles.swipeStat}>
+            <Text style={styles.swipeIcon}>⟳</Text>
+            <Text style={styles.swipeNum}>{swipeStats.likes + swipeStats.dislikes}</Text>
+            <Text style={styles.swipeLabel}>Gesamt</Text>
           </View>
         </View>
       </View>
@@ -214,6 +247,12 @@ const styles = StyleSheet.create({
   statNum: { fontSize: 22, fontWeight: '900', color: '#fff' },
   statLabel: { fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
   statDivider: { width: 1, height: 32, backgroundColor: 'rgba(255,255,255,0.25)' },
+  swipeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 0, marginTop: 14, backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 16, paddingVertical: 14, paddingHorizontal: 20, width: '100%' },
+  swipeStat: { flex: 1, alignItems: 'center' },
+  swipeIcon: { fontSize: 18, marginBottom: 2, color: colors.primary },
+  swipeNum: { fontSize: 20, fontWeight: '900', color: '#fff' },
+  swipeLabel: { fontSize: 10, color: 'rgba(255,255,255,0.55)', marginTop: 2, fontWeight: '600' },
+  swipeDivider: { width: 1, height: 28, backgroundColor: 'rgba(255,255,255,0.15)' },
   card: { marginHorizontal: spacing.lg, marginTop: spacing.md, backgroundColor: 'rgba(255,255,255,0.88)',
     borderRadius: 20, padding: spacing.lg, borderWidth: 1, borderColor: 'rgba(255,255,255,0.6)' },
   cardTitle: { fontSize: 13, fontWeight: '800', color: '#555',
