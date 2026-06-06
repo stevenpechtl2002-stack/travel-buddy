@@ -36,14 +36,12 @@ export function useFeed(userId: string) {
         .select(`
           id, user_id, content, image_url, location, type, repost_of,
           like_count, repost_count, comment_count, created_at,
-          author:profiles!posts_user_id_fkey(name, profile_image_url),
-          my_likes:post_likes!left(id),
-          my_reposts:post_reposts!left(id)
+          author:profiles!posts_user_id_fkey(name, profile_image_url)
         `)
         .order('created_at', { ascending: false })
         .limit(40)
 
-      if (error) throw error
+      if (error) { console.warn('Feed query error:', JSON.stringify(error)); throw error }
 
       // Fetch repost origins
       const repostIds = (data ?? [])
@@ -65,7 +63,7 @@ export function useFeed(userId: string) {
         content: p.content,
         image_url: p.image_url,
         location: p.location,
-        type: p.type,
+        type: p.type ?? 'post',
         repost_of: p.repost_of,
         like_count: p.like_count ?? 0,
         repost_count: p.repost_count ?? 0,
@@ -73,8 +71,8 @@ export function useFeed(userId: string) {
         created_at: p.created_at,
         author: Array.isArray(p.author) ? p.author[0] : p.author,
         repost_origin: p.repost_of ? originsMap[p.repost_of] : undefined,
-        liked_by_me: Array.isArray(p.my_likes) ? p.my_likes.length > 0 : false,
-        reposted_by_me: Array.isArray(p.my_reposts) ? p.my_reposts.length > 0 : false,
+        liked_by_me: false,
+        reposted_by_me: false,
       }))
 
       setPosts(mapped)
