@@ -131,7 +131,7 @@ function FeedTabBar({ active }: { active: 'home' | 'chat' | 'search' | 'profile'
   const router = useRouter()
   const tabs = [
     { key: 'home',    icon: '⌂',  label: 'Home',    route: '/feed' },
-    { key: 'chat',    icon: '💬', label: 'Chat',    route: '/(tabs)/matches' },
+    { key: 'chat',    icon: '💬', label: 'Chat',    route: '/chats' },
     { key: 'search',  icon: '⊙',  label: 'Suchen',  route: '/explore' },
     { key: 'profile', icon: '◯',  label: 'Profil',  route: '/(tabs)/profile' },
   ] as const
