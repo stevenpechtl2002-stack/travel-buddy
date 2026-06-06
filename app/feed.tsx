@@ -39,13 +39,126 @@ function Avatar({ uri, size = 40, name = '?' }: { uri?: string | null; size?: nu
   )
 }
 
+// ── Comment Sheet ─────────────────────────────────────────────
+function CommentSheet({ postId, userId, myProfile, visible, onClose, onCommentAdded }: {
+  postId: string; userId: string
+  myProfile: { name: string; profile_image_url: string | null }
+  visible: boolean; onClose: () => void; onCommentAdded: () => void
+}) {
+  const [comments, setComments] = useState<any[]>([])
+  const [text, setText] = useState('')
+  const [sending, setSending] = useState(false)
+
+  useEffect(() => {
+    if (!visible || !postId) return
+    supabase.from('post_comments')
+      .select('id, content, created_at, user_id, author:profiles!post_comments_user_id_fkey(name, profile_image_url)')
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true })
+      .then(async ({ data, error }) => {
+        if (error || !data) {
+          // fallback: fetch profiles separately
+          const { data: raw } = await supabase.from('post_comments')
+            .select('id, content, created_at, user_id')
+            .eq('post_id', postId)
+            .order('created_at', { ascending: true })
+          if (!raw) return
+          const uids = [...new Set(raw.map(c => c.user_id))]
+          const { data: profs } = await supabase.from('profiles').select('id, name, profile_image_url').in('id', uids)
+          const pm: Record<string, any> = {}
+          for (const p of profs ?? []) pm[p.id] = p
+          setComments(raw.map(c => ({ ...c, author: pm[c.user_id] ?? { name: '?', profile_image_url: null } })))
+        } else {
+          setComments(data.map(c => ({ ...c, author: Array.isArray(c.author) ? c.author[0] : c.author })))
+        }
+      })
+  }, [visible, postId])
+
+  const send = async () => {
+    if (!text.trim()) return
+    setSending(true)
+    const { error } = await supabase.from('post_comments').insert({ post_id: postId, user_id: userId, content: text.trim() })
+    if (!error) {
+      await supabase.from('posts').update({ comment_count: (comments.length + 1) }).eq('id', postId)
+      setComments(prev => [...prev, { id: Date.now().toString(), content: text.trim(), created_at: new Date().toISOString(), user_id: userId, author: myProfile }])
+      setText('')
+      onCommentAdded()
+    }
+    setSending(false)
+  }
+
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
+        <View style={cmtS.root}>
+          <View style={cmtS.handle} />
+          <View style={cmtS.header}>
+            <Text style={cmtS.title}>Kommentare</Text>
+            <Pressable onPress={onClose}><Text style={cmtS.close}>✕</Text></Pressable>
+          </View>
+          <FlatList
+            data={comments}
+            keyExtractor={c => c.id}
+            contentContainerStyle={cmtS.list}
+            ListEmptyComponent={<Text style={cmtS.empty}>Noch keine Kommentare. Sei der Erste!</Text>}
+            renderItem={({ item }) => (
+              <View style={cmtS.row}>
+                <Avatar uri={item.author?.profile_image_url} name={item.author?.name ?? '?'} size={36} />
+                <View style={cmtS.bubble}>
+                  <Text style={cmtS.name}>{item.author?.name ?? 'Unbekannt'}</Text>
+                  <Text style={cmtS.text}>{item.content}</Text>
+                </View>
+              </View>
+            )}
+          />
+          <View style={cmtS.inputRow}>
+            <Avatar uri={myProfile.profile_image_url} name={myProfile.name} size={32} />
+            <TextInput
+              style={cmtS.input}
+              value={text}
+              onChangeText={setText}
+              placeholder="Kommentar schreiben…"
+              placeholderTextColor="rgba(245,240,235,0.3)"
+              multiline
+            />
+            <Pressable onPress={send} disabled={sending || !text.trim()} style={cmtS.sendBtn}>
+              <LinearGradient colors={gradients.brand} style={cmtS.sendGrad}>
+                <Text style={cmtS.sendIcon}>{sending ? '…' : '↑'}</Text>
+              </LinearGradient>
+            </Pressable>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+    </Modal>
+  )
+}
+const cmtS = StyleSheet.create({
+  root: { flex: 1, backgroundColor: '#0d1b2e' },
+  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: 'rgba(245,240,235,0.2)', alignSelf: 'center', marginTop: 10 },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderColor: 'rgba(245,240,235,0.08)' },
+  title: { fontSize: 17, fontWeight: '900', color: colors.text },
+  close: { fontSize: 18, color: colors.textMuted, paddingHorizontal: 8 },
+  list: { padding: 16, gap: 14, paddingBottom: 8 },
+  empty: { textAlign: 'center', color: colors.textMuted, marginTop: 40, fontSize: 14 },
+  row: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
+  bubble: { flex: 1, backgroundColor: 'rgba(245,240,235,0.07)', borderRadius: 14, padding: 10 },
+  name: { fontSize: 12, fontWeight: '800', color: colors.primary, marginBottom: 3 },
+  text: { fontSize: 14, color: colors.text, lineHeight: 20 },
+  inputRow: { flexDirection: 'row', alignItems: 'flex-end', gap: 10, padding: 12, borderTopWidth: 1, borderColor: 'rgba(245,240,235,0.08)' },
+  input: { flex: 1, backgroundColor: 'rgba(245,240,235,0.08)', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 10, color: colors.text, fontSize: 14, maxHeight: 100 },
+  sendBtn: { borderRadius: 18, overflow: 'hidden' },
+  sendGrad: { width: 36, height: 36, justifyContent: 'center', alignItems: 'center' },
+  sendIcon: { color: '#fff', fontSize: 16, fontWeight: '900' },
+})
+
 // ── Post card ─────────────────────────────────────────────────
-function PostCard({ post, currentUserId, onLike, onRepost, onDelete }: {
+function PostCard({ post, currentUserId, onLike, onRepost, onDelete, onComment }: {
   post: FeedPost
   currentUserId: string
   onLike: () => void
   onRepost: () => void
   onDelete: () => void
+  onComment: () => void
 }) {
   const likeAnim = useRef(new Animated.Value(1)).current
 
@@ -129,7 +242,7 @@ function PostCard({ post, currentUserId, onLike, onRepost, onDelete }: {
           </Text>
         </Pressable>
 
-        <Pressable style={styles.actionBtn}>
+        <Pressable style={styles.actionBtn} onPress={onComment}>
           <Text style={styles.actionIcon}>💬</Text>
           <Text style={styles.actionCount}>{post.comment_count > 0 ? post.comment_count : ''}</Text>
         </Pressable>
@@ -349,6 +462,7 @@ export default function FeedScreen() {
   const [composeVisible, setComposeVisible] = useState(false)
   const [storyViewerVisible, setStoryViewerVisible] = useState(false)
   const [storyStartIndex, setStoryStartIndex] = useState(0)
+  const [commentPostId, setCommentPostId] = useState<string | null>(null)
   const [myProfile, setMyProfile] = useState<{ name: string; profile_image_url: string | null }>({
     name: '?', profile_image_url: null,
   })
@@ -458,6 +572,7 @@ export default function FeedScreen() {
               onLike={() => toggleLike(item.id)}
               onRepost={() => repost(item.id)}
               onDelete={() => handleDelete(item.id)}
+              onComment={() => setCommentPostId(item.id)}
             />
           )}
         />
@@ -484,6 +599,18 @@ export default function FeedScreen() {
         onClose={() => setStoryViewerVisible(false)}
         onSeen={markSeen}
       />
+
+      {/* Comment Sheet */}
+      {commentPostId && (
+        <CommentSheet
+          postId={commentPostId}
+          userId={userId}
+          myProfile={myProfile}
+          visible={!!commentPostId}
+          onClose={() => setCommentPostId(null)}
+          onCommentAdded={() => load(true)}
+        />
+      )}
 
       {/* Bottom nav */}
       <FeedTabBar active="home" />
