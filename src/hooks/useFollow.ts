@@ -11,18 +11,22 @@ export interface SuggestedUser {
 
 export function useFollow(userId: string) {
   const [following, setFollowing] = useState<Set<string>>(new Set())
+  const [followingProfiles, setFollowingProfiles] = useState<SuggestedUser[]>([])
   const [suggested, setSuggested] = useState<SuggestedUser[]>([])
   const [loadingSuggested, setLoadingSuggested] = useState(true)
 
-  // Load who I already follow
+  // Load who I already follow + their profiles
   useEffect(() => {
     if (!userId) return
     supabase
       .from('follows')
-      .select('following_id')
+      .select('following_id, profile:profiles!follows_following_id_fkey(id, name, profile_image_url, country, bio)')
       .eq('follower_id', userId)
       .then(({ data }) => {
-        if (data) setFollowing(new Set(data.map((r: any) => r.following_id)))
+        if (!data) return
+        const ids = new Set<string>(data.map((r: any) => r.following_id))
+        setFollowing(ids)
+        setFollowingProfiles(data.map((r: any) => r.profile).filter(Boolean) as SuggestedUser[])
       })
   }, [userId])
 
@@ -62,5 +66,5 @@ export function useFollow(userId: string) {
 
   const isFollowing = (targetId: string) => following.has(targetId)
 
-  return { following, suggested, loadingSuggested, follow, unfollow, isFollowing, loadSuggested }
+  return { following, followingProfiles, suggested, loadingSuggested, follow, unfollow, isFollowing, loadSuggested }
 }

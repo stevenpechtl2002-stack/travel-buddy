@@ -1,15 +1,15 @@
 import { colors, gradients, spacing } from '@/src/constants/theme'
-import { useFollow } from '@/src/hooks/useFollow'
+import { useFollow, SuggestedUser } from '@/src/hooks/useFollow'
 import { useAuth } from '@/src/hooks/useAuth'
-import { useMatches } from '@/src/hooks/useMatches'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
 import {
-  ActivityIndicator, FlatList, Image, Pressable,
-  RefreshControl, ScrollView, StyleSheet, Text, TextInput, View,
+  FlatList, Image, Pressable,
+  ScrollView, StyleSheet, Text, TextInput, View,
 } from 'react-native'
 
+// ── Avatar ────────────────────────────────────────────────────
 function Avatar({ uri, size = 44, name = '?' }: { uri?: string | null; size?: number; name?: string }) {
   if (uri) return <Image source={{ uri }} style={{ width: size, height: size, borderRadius: size / 2 }} />
   return (
@@ -22,15 +22,7 @@ function Avatar({ uri, size = 44, name = '?' }: { uri?: string | null; size?: nu
   )
 }
 
-function timeShort(iso: string) {
-  const diff = (Date.now() - new Date(iso).getTime()) / 1000
-  if (diff < 60) return 'jetzt'
-  if (diff < 3600) return `${Math.floor(diff / 60)}m`
-  if (diff < 86400) return `${Math.floor(diff / 3600)}h`
-  return `${Math.floor(diff / 86400)}d`
-}
-
-// ── Bottom tab bar ────────────────────────────────────────────
+// ── Bottom nav bar ────────────────────────────────────────────
 function ChatsTabBar() {
   const router = useRouter()
   const tabs = [
@@ -81,23 +73,16 @@ const navStyles = StyleSheet.create({
 export default function ChatsScreen() {
   const { session } = useAuth()
   const userId = session?.user.id ?? ''
-  const { matches, loading, refresh } = useMatches(userId)
-  const { suggested, follow, unfollow, isFollowing } = useFollow(userId)
+  const { followingProfiles, suggested, follow, unfollow, isFollowing } = useFollow(userId)
   const router = useRouter()
   const [search, setSearch] = useState('')
-  const [refreshing, setRefreshing] = useState(false)
 
-  const doRefresh = async () => {
-    setRefreshing(true)
-    await refresh()
-    setRefreshing(false)
-  }
-
-  const filtered = matches.filter(m =>
-    m.other_user.name.toLowerCase().includes(search.toLowerCase())
+  const filteredFollowing = followingProfiles.filter(p =>
+    p.name.toLowerCase().includes(search.toLowerCase())
   )
 
-  function SuggestedCard({ user }: { user: typeof suggested[0] }) {
+  // ── Suggested card
+  function SuggestedCard({ user }: { user: SuggestedUser }) {
     const followed = isFollowing(user.id)
     return (
       <View style={styles.sugCard}>
@@ -120,27 +105,28 @@ export default function ChatsScreen() {
     )
   }
 
-  function DmRow({ match }: { match: typeof matches[0] }) {
-    const u = match.other_user
-    const isDemo = u.id.startsWith('demo-')
+  // ── DM row (people you follow)
+  function DmRow({ user }: { user: SuggestedUser }) {
     return (
-      <Pressable style={styles.dmRow} onPress={() => router.push(`/chat/${match.id}`)}>
+      <Pressable style={styles.dmRow}>
         <View style={styles.dmAvatarWrap}>
           <LinearGradient colors={gradients.brand} style={styles.dmRing}>
-            <Avatar uri={u.profile_image_url} name={u.name} size={50} />
+            <Avatar uri={user.profile_image_url} name={user.name} size={50} />
           </LinearGradient>
           <View style={styles.onlineDot} />
         </View>
         <View style={styles.dmInfo}>
-          <Text style={styles.dmName}>{u.name}{u.age ? `, ${u.age}` : ''}</Text>
+          <Text style={styles.dmName}>{user.name}</Text>
           <Text style={styles.dmPreview} numberOfLines={1}>
-            {isDemo ? '👋 Schreib als Erster!' : `📍 ${u.country ?? 'Reisepartner'} · Tippe zum Chatten`}
+            {user.country ? `📍 ${user.country}` : 'Reisende·r'}
+            {user.bio ? ` · ${user.bio}` : ''}
           </Text>
         </View>
-        <View style={styles.dmRight}>
-          <Text style={styles.dmTime}>{timeShort(match.created_at)}</Text>
-          <View style={styles.unreadDot} />
-        </View>
+        <Pressable style={styles.msgBtn}>
+          <LinearGradient colors={gradients.brand} style={styles.msgBtnGrad}>
+            <Text style={styles.msgBtnText}>Nachricht</Text>
+          </LinearGradient>
+        </Pressable>
       </Pressable>
     )
   }
@@ -148,27 +134,23 @@ export default function ChatsScreen() {
   function ListHeader() {
     return (
       <>
-        {/* Story-style match bubbles */}
-        {matches.length > 0 && (
-          <View style={styles.bubblesSection}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.bubblesRow}>
-              {matches.slice(0, 10).map(match => (
-                <Pressable key={match.id} style={styles.bubble}
-                  onPress={() => router.push(`/chat/${match.id}`)}>
-                  <LinearGradient colors={gradients.brand} style={styles.bubbleRing}>
-                    <Avatar uri={match.other_user.profile_image_url} name={match.other_user.name} size={56} />
-                  </LinearGradient>
-                  <Text style={styles.bubbleName} numberOfLines={1}>
-                    {match.other_user.name.split(' ')[0]}
-                  </Text>
-                </Pressable>
-              ))}
-            </ScrollView>
-          </View>
+        {/* Following story bubbles */}
+        {followingProfiles.length > 0 && (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.bubblesRow}
+            style={styles.bubblesSection}>
+            {followingProfiles.slice(0, 12).map(u => (
+              <View key={u.id} style={styles.bubble}>
+                <LinearGradient colors={gradients.brand} style={styles.bubbleRing}>
+                  <Avatar uri={u.profile_image_url} name={u.name} size={56} />
+                </LinearGradient>
+                <Text style={styles.bubbleName} numberOfLines={1}>{u.name.split(' ')[0]}</Text>
+              </View>
+            ))}
+          </ScrollView>
         )}
 
-        {/* Suggested people */}
+        {/* Suggested */}
         {suggested.length > 0 && (
           <View style={styles.sugSection}>
             <Text style={styles.sectionLabel}>Vorgeschlagen</Text>
@@ -179,9 +161,11 @@ export default function ChatsScreen() {
           </View>
         )}
 
-        <View style={styles.dmDivider}>
-          <Text style={styles.sectionLabel}>Nachrichten</Text>
-        </View>
+        {followingProfiles.length > 0 && (
+          <View style={styles.dmDivider}>
+            <Text style={styles.sectionLabel}>Personen die du folgst</Text>
+          </View>
+        )}
       </>
     )
   }
@@ -209,37 +193,29 @@ export default function ChatsScreen() {
         />
       </View>
 
-      {loading ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <ActivityIndicator color={colors.primary} size="large" />
-        </View>
-      ) : (
-        <FlatList
-          data={filtered}
-          keyExtractor={m => m.id}
-          contentContainerStyle={styles.list}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={doRefresh}
-              tintColor={colors.primary} colors={[colors.primary]} />
-          }
-          ListHeaderComponent={<ListHeader />}
-          ListEmptyComponent={
+      <FlatList
+        data={filteredFollowing}
+        keyExtractor={u => u.id}
+        contentContainerStyle={styles.list}
+        ListHeaderComponent={<ListHeader />}
+        ListEmptyComponent={
+          followingProfiles.length === 0 ? (
             <View style={styles.empty}>
               <Text style={styles.emptyEmoji}>💬</Text>
               <Text style={styles.emptyTitle}>Noch keine Chats</Text>
-              <Text style={styles.emptySub}>Swipe und finde deinen Reisepartner!</Text>
-              <Pressable onPress={() => router.push('/(tabs)/discover')}
+              <Text style={styles.emptySub}>Folge Personen um ihnen Nachrichten zu schreiben.</Text>
+              <Pressable onPress={() => router.push('/explore')}
                 style={{ borderRadius: 50, overflow: 'hidden', marginTop: 20 }}>
                 <LinearGradient colors={gradients.brand}
                   style={{ paddingHorizontal: 28, paddingVertical: 13 }}>
-                  <Text style={{ color: '#fff', fontWeight: '900', fontSize: 15 }}>Entdecken</Text>
+                  <Text style={{ color: '#fff', fontWeight: '900', fontSize: 15 }}>Personen suchen</Text>
                 </LinearGradient>
               </Pressable>
             </View>
-          }
-          renderItem={({ item }) => <DmRow match={item} />}
-        />
-      )}
+          ) : null
+        }
+        renderItem={({ item }) => <DmRow user={item} />}
+      />
 
       <ChatsTabBar />
     </View>
@@ -248,6 +224,7 @@ export default function ChatsScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
+
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: spacing.lg, paddingTop: 62, paddingBottom: 10,
@@ -261,6 +238,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(245,240,235,0.13)',
   },
   headerIconText: { fontSize: 17, color: colors.text },
+
   searchWrap: {
     flexDirection: 'row', alignItems: 'center',
     margin: spacing.md, marginTop: 10,
@@ -270,13 +248,16 @@ const styles = StyleSheet.create({
   },
   searchIconText: { fontSize: 14, marginRight: 8 },
   searchInput: { flex: 1, fontSize: 15, color: colors.text },
+
   list: { paddingBottom: 120 },
-  bubblesSection: { marginBottom: 4 },
-  bubblesRow: { paddingHorizontal: spacing.lg, paddingVertical: 12, gap: 16 },
+
+  bubblesSection: { borderBottomWidth: 1, borderColor: 'rgba(245,240,235,0.06)' },
+  bubblesRow: { paddingHorizontal: spacing.lg, paddingVertical: 14, gap: 16 },
   bubble: { alignItems: 'center', width: 68 },
   bubbleRing: { width: 68, height: 68, borderRadius: 34, padding: 3, marginBottom: 6 },
   bubbleName: { fontSize: 11, color: colors.text, fontWeight: '700', textAlign: 'center' },
-  sugSection: { marginBottom: 4 },
+
+  sugSection: { paddingTop: 16, marginBottom: 4 },
   sugRow: { paddingHorizontal: spacing.lg, gap: 10, paddingBottom: 4 },
   sugCard: {
     width: 130, backgroundColor: 'rgba(245,240,235,0.07)',
@@ -293,12 +274,14 @@ const styles = StyleSheet.create({
     paddingVertical: 7, alignItems: 'center',
   },
   followBtnFollowedText: { color: colors.textMuted, fontSize: 12, fontWeight: '700', textAlign: 'center' },
+
   sectionLabel: {
     fontSize: 11, fontWeight: '800', color: colors.textMuted,
     letterSpacing: 1, textTransform: 'uppercase',
     paddingHorizontal: spacing.lg, marginBottom: 8,
   },
-  dmDivider: { paddingBottom: 10, paddingTop: 4 },
+  dmDivider: { paddingTop: 16, paddingBottom: 8 },
+
   dmRow: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: spacing.lg, paddingVertical: 12,
@@ -313,10 +296,11 @@ const styles = StyleSheet.create({
   },
   dmInfo: { flex: 1 },
   dmName: { fontSize: 15, fontWeight: '800', color: colors.text, marginBottom: 3 },
-  dmPreview: { fontSize: 13, color: colors.textMuted },
-  dmRight: { alignItems: 'flex-end', gap: 6, marginLeft: 8 },
-  dmTime: { fontSize: 11, color: colors.textMuted },
-  unreadDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary },
+  dmPreview: { fontSize: 12, color: colors.textMuted },
+  msgBtn: { borderRadius: 16, overflow: 'hidden', marginLeft: 8 },
+  msgBtnGrad: { paddingHorizontal: 12, paddingVertical: 6 },
+  msgBtnText: { color: '#fff', fontWeight: '800', fontSize: 11 },
+
   empty: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 32 },
   emptyEmoji: { fontSize: 56, marginBottom: 16 },
   emptyTitle: { fontSize: 20, fontWeight: '900', color: colors.text, marginBottom: 8 },
