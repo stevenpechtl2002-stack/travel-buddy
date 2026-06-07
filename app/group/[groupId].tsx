@@ -56,7 +56,7 @@ export default function GroupDetailScreen() {
   const [input, setInput] = useState('')
   const [settingsVisible, setSettingsVisible] = useState(false)
   const [settingsMaxMembers, setSettingsMaxMembers] = useState<number | null>(group?.max_members ?? null)
-  const [settingsGender, setSettingsGender] = useState<'all' | 'male' | 'female'>(group?.allowed_gender ?? 'all')
+  const [settingsGender, setSettingsGender] = useState<'all' | 'male' | 'female'>((group?.allowed_gender as 'all' | 'male' | 'female') ?? 'all')
   const [settingsReligion, setSettingsReligion] = useState<string>(group?.allowed_religion ?? 'all')
 
   // Plan
@@ -165,7 +165,7 @@ export default function GroupDetailScreen() {
           <Pressable onPress={() => router.back()}><Text style={styles.back}>‹</Text></Pressable>
           <Text style={styles.headerTitle} numberOfLines={1}>{group.name}</Text>
           {myRole === 'admin'
-            ? <Pressable onPress={() => { setSettingsMaxMembers(group?.max_members ?? null); setSettingsGender(group?.allowed_gender ?? 'all'); setSettingsVisible(true) }} style={styles.settingsBtn}>
+            ? <Pressable onPress={() => { setSettingsMaxMembers(group?.max_members ?? null); setSettingsGender((group?.allowed_gender as 'all' | 'male' | 'female') ?? 'all'); setSettingsVisible(true) }} style={styles.settingsBtn}>
                 <Text style={styles.settingsIcon}>⚙</Text>
               </Pressable>
             : <View style={{ width: 32 }} />}
@@ -226,7 +226,7 @@ export default function GroupDetailScreen() {
                   <WheelDatePicker value={editTo || null} onChange={setEditTo} />
                   <View style={[styles.planBtnRow, { marginTop: 12 }]}>
                     <Pressable style={styles.saveBtn} onPress={handleSavePlan}><Text style={styles.saveBtnText}>Speichern</Text></Pressable>
-                    <Pressable onPress={() => setEditingPlan(false)}><Text style={styles.cancelBtn}>Abbrechen</Text></Pressable>
+                    <Pressable onPress={() => setEditingPlan(false)}><Text style={styles.cancelBtnInline}>Abbrechen</Text></Pressable>
                   </View>
                 </>
               ) : (
@@ -407,7 +407,7 @@ export default function GroupDetailScreen() {
                 )}
                 <View style={styles.planBtnRow}>
                   <Pressable style={styles.saveBtn} onPress={handleCreatePoll}><Text style={styles.saveBtnText}>Erstellen</Text></Pressable>
-                  <Pressable onPress={() => setCreatingPoll(false)}><Text style={styles.cancelBtn}>Abbrechen</Text></Pressable>
+                  <Pressable onPress={() => setCreatingPoll(false)}><Text style={styles.cancelBtnInline}>Abbrechen</Text></Pressable>
                 </View>
               </View>
             )}
@@ -607,11 +607,39 @@ export default function GroupDetailScreen() {
             ))}
           </View>
 
-          <Pressable style={styles.saveBtn} onPress={saveSettings}>
-            <Text style={styles.saveBtnText}>Speichern</Text>
+          <Pressable style={styles.settingsSaveBtn} onPress={saveSettings}>
+            <Text style={styles.settingsSaveBtnText}>Speichern</Text>
           </Pressable>
           <Pressable style={styles.cancelBtn} onPress={() => setSettingsVisible(false)}>
             <Text style={styles.cancelBtnText}>Abbrechen</Text>
+          </Pressable>
+
+          <Pressable style={styles.deleteGroupBtn} onPress={() => {
+            Alert.alert(
+              'Gruppe löschen',
+              `Möchtest du "${group.name}" wirklich löschen? Dies kann nicht rückgängig gemacht werden.`,
+              [
+                { text: 'Abbrechen', style: 'cancel' },
+                {
+                  text: 'Löschen',
+                  style: 'destructive',
+                  onPress: async () => {
+                    try {
+                      await supabase.from('group_members').delete().eq('group_id', groupId)
+                      await supabase.from('group_messages').delete().eq('group_id', groupId)
+                      const { error } = await supabase.from('groups').delete().eq('id', groupId)
+                      if (error) throw error
+                      setSettingsVisible(false)
+                      router.back()
+                    } catch {
+                      Alert.alert('Fehler', 'Gruppe konnte nicht gelöscht werden.')
+                    }
+                  },
+                },
+              ]
+            )
+          }}>
+            <Text style={styles.deleteGroupBtnText}>🗑 Gruppe löschen</Text>
           </Pressable>
         </View>
       </Modal>
@@ -662,10 +690,12 @@ const styles = StyleSheet.create({
   chipTextActive: { color: '#fff' },
   settingsInfo: { marginTop: 24, padding: 14, backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 12 },
   settingsInfoText: { fontSize: 13, color: 'rgba(255,255,255,0.5)', textAlign: 'center' },
-  saveBtn: { marginTop: 28, backgroundColor: colors.primary, borderRadius: 16, padding: 16, alignItems: 'center' },
-  saveBtnText: { color: '#fff', fontWeight: '900', fontSize: 16 },
+  settingsSaveBtn: { marginTop: 28, backgroundColor: colors.primary, borderRadius: 16, padding: 16, alignItems: 'center' },
+  settingsSaveBtnText: { color: '#fff', fontWeight: '900', fontSize: 16 },
   cancelBtn: { marginTop: 12, padding: 16, alignItems: 'center' },
   cancelBtnText: { color: 'rgba(255,255,255,0.4)', fontSize: 15 },
+  deleteGroupBtn: { marginTop: 20, marginBottom: 8, borderWidth: 1.5, borderColor: 'rgba(224,85,85,0.4)', borderRadius: 16, padding: 16, alignItems: 'center', backgroundColor: 'rgba(224,85,85,0.08)' },
+  deleteGroupBtnText: { color: '#e05555', fontWeight: '800', fontSize: 15 },
   headerTitle: { fontSize: 17, fontWeight: '900', color: '#fff', flex: 1, textAlign: 'center' },
   tabsScroll: { flexGrow: 0, borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   tabsContent: { paddingHorizontal: spacing.md, paddingVertical: 8, gap: 6 },
@@ -688,7 +718,7 @@ const styles = StyleSheet.create({
   planBtnRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginTop: 8 },
   saveBtn: { backgroundColor: colors.primary, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 11, alignItems: 'center' },
   saveBtnText: { color: '#fff', fontWeight: '800', fontSize: 13 },
-  cancelBtn: { color: 'rgba(255,255,255,0.5)', fontWeight: '700', fontSize: 14 },
+  cancelBtnInline: { color: 'rgba(255,255,255,0.5)', fontWeight: '700', fontSize: 14 },
   sectionLbl: { fontSize: 12, fontWeight: '800', color: 'rgba(255,255,255,0.6)', marginBottom: 8, letterSpacing: 0.5, textTransform: 'uppercase' },
   actTitle: { fontSize: 14, fontWeight: '700', color: '#fff' },
   actMeta: { fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 2 },

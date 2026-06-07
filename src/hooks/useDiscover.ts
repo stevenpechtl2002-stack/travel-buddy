@@ -15,7 +15,7 @@ const DEMO_CANDIDATES: DiscoverProfile[] = [
       bio: 'Solo-Reisende auf der Suche nach Abenteuern 🌏',
       profile_image_url: 'https://picsum.photos/seed/laura/400/600',
       travel_style: 'adventure', languages: [], verified: false, is_premium: false,
-      onboarding_complete: true, created_at: '',
+      onboarding_complete: true, created_at: '', tagline: null, religion: null, photo_urls: null,
     },
     destinations: [
       { id: 'd1', user_id: 'demo-1', country: 'Thailand', city: 'Bangkok', date_from: null, date_to: null },
@@ -29,7 +29,7 @@ const DEMO_CANDIDATES: DiscoverProfile[] = [
       bio: 'Backpacker & Kaffeeliebhaber ☕ Auf der Suche nach dem nächsten Abenteuer.',
       profile_image_url: 'https://picsum.photos/seed/max/400/600',
       travel_style: 'backpacker', languages: [], verified: false, is_premium: false,
-      onboarding_complete: true, created_at: '',
+      onboarding_complete: true, created_at: '', tagline: null, religion: null, photo_urls: null,
     },
     destinations: [
       { id: 'd3', user_id: 'demo-2', country: 'Japan', city: 'Tokio', date_from: null, date_to: null },
@@ -43,7 +43,7 @@ const DEMO_CANDIDATES: DiscoverProfile[] = [
       bio: 'Digital Nomad 💻 | Strandliebhaberin | Immer auf Achse',
       profile_image_url: 'https://picsum.photos/seed/sofia/400/600',
       travel_style: 'beach', languages: [], verified: false, is_premium: false,
-      onboarding_complete: true, created_at: '',
+      onboarding_complete: true, created_at: '', tagline: null, religion: null, photo_urls: null,
     },
     destinations: [
       { id: 'd5', user_id: 'demo-3', country: 'Portugal', city: 'Lissabon', date_from: null, date_to: null },
@@ -57,7 +57,7 @@ const DEMO_CANDIDATES: DiscoverProfile[] = [
       bio: 'Bergsteiger & Naturliebhaber 🏔️ Die Berge rufen immer.',
       profile_image_url: 'https://picsum.photos/seed/jonas/400/600',
       travel_style: 'adventure', languages: [], verified: false, is_premium: false,
-      onboarding_complete: true, created_at: '',
+      onboarding_complete: true, created_at: '', tagline: null, religion: null, photo_urls: null,
     },
     destinations: [
       { id: 'd7', user_id: 'demo-4', country: 'Nepal', city: 'Kathmandu', date_from: null, date_to: null },
@@ -71,7 +71,7 @@ const DEMO_CANDIDATES: DiscoverProfile[] = [
       bio: 'Foodie & Kulturreisende 🍜 Jede Stadt durch ihren Geschmack entdecken.',
       profile_image_url: 'https://picsum.photos/seed/mia/400/600',
       travel_style: 'city', languages: [], verified: false, is_premium: false,
-      onboarding_complete: true, created_at: '',
+      onboarding_complete: true, created_at: '', tagline: null, religion: null, photo_urls: null,
     },
     destinations: [
       { id: 'd9', user_id: 'demo-5', country: 'Vietnam', city: 'Hanoi', date_from: null, date_to: null },
@@ -85,7 +85,7 @@ const DEMO_CANDIDATES: DiscoverProfile[] = [
       bio: 'Fotograf & Geschichtenerzähler 📷 Die Welt durch die Linse.',
       profile_image_url: 'https://picsum.photos/seed/luca/400/600',
       travel_style: 'city', languages: [], verified: false, is_premium: false,
-      onboarding_complete: true, created_at: '',
+      onboarding_complete: true, created_at: '', tagline: null, religion: null, photo_urls: null,
     },
     destinations: [
       { id: 'd11', user_id: 'demo-6', country: 'Kuba', city: 'Havanna', date_from: null, date_to: null },
@@ -99,7 +99,7 @@ const DEMO_CANDIDATES: DiscoverProfile[] = [
       bio: 'Studentin auf Weltreise 🎒 Ein Jahr, alle Kontinente.',
       profile_image_url: 'https://picsum.photos/seed/emma/400/600',
       travel_style: 'backpacker', languages: [], verified: false, is_premium: false,
-      onboarding_complete: true, created_at: '',
+      onboarding_complete: true, created_at: '', tagline: null, religion: null, photo_urls: null,
     },
     destinations: [
       { id: 'd13', user_id: 'demo-7', country: 'Australien', city: 'Melbourne', date_from: null, date_to: null },
@@ -113,7 +113,7 @@ const DEMO_CANDIDATES: DiscoverProfile[] = [
       bio: 'Van life enthusiast 🚐 Die Straße ist mein Zuhause.',
       profile_image_url: 'https://picsum.photos/seed/noah/400/600',
       travel_style: 'adventure', languages: [], verified: false, is_premium: false,
-      onboarding_complete: true, created_at: '',
+      onboarding_complete: true, created_at: '', tagline: null, religion: null, photo_urls: null,
     },
     destinations: [
       { id: 'd15', user_id: 'demo-8', country: 'Island', city: 'Reykjavík', date_from: null, date_to: null },
@@ -127,7 +127,7 @@ const DEMO_CANDIDATES: DiscoverProfile[] = [
       bio: 'Manga-Fan & Weltenbummlerin 🌸 Kultur verbindet uns alle.',
       profile_image_url: 'https://picsum.photos/seed/yuki/400/600',
       travel_style: 'city', languages: [], verified: false, is_premium: false,
-      onboarding_complete: true, created_at: '',
+      onboarding_complete: true, created_at: '', tagline: null, religion: null, photo_urls: null,
     },
     destinations: [
       { id: 'd17', user_id: 'demo-9', country: 'Südafrika', city: 'Kapstadt', date_from: null, date_to: null },
@@ -141,7 +141,7 @@ const DEMO_CANDIDATES: DiscoverProfile[] = [
       bio: 'Weltreisender & Sprachliebhaber 🗣️ Spreche 5 Sprachen fließend.',
       profile_image_url: 'https://randomuser.me/api/portraits/men/6.jpg',
       travel_style: 'backpacker', languages: [], verified: false, is_premium: false,
-      onboarding_complete: true, created_at: '',
+      onboarding_complete: true, created_at: '', tagline: null, religion: null, photo_urls: null,
     },
     destinations: [
       { id: 'd19', user_id: 'demo-10', country: 'Georgien', city: 'Tiflis', date_from: null, date_to: null },
@@ -155,7 +155,7 @@ const DEMO_CANDIDATES: DiscoverProfile[] = [
       bio: 'Luxus-Backpackerin 🥂 Reisen muss nicht teuer sein, aber manchmal darf es das.',
       profile_image_url: 'https://randomuser.me/api/portraits/women/39.jpg',
       travel_style: 'luxury', languages: [], verified: false, is_premium: true,
-      onboarding_complete: true, created_at: '',
+      onboarding_complete: true, created_at: '', tagline: null, religion: null, photo_urls: null,
     },
     destinations: [
       { id: 'd21', user_id: 'demo-11', country: 'Malediven', city: null, date_from: null, date_to: null },
@@ -169,7 +169,7 @@ const DEMO_CANDIDATES: DiscoverProfile[] = [
       bio: 'Nordlichter-Jäger & Winterkamper ❄️ Kälte ist kein Problem.',
       profile_image_url: 'https://randomuser.me/api/portraits/men/3.jpg',
       travel_style: 'adventure', languages: [], verified: false, is_premium: false,
-      onboarding_complete: true, created_at: '',
+      onboarding_complete: true, created_at: '', tagline: null, religion: null, photo_urls: null,
     },
     destinations: [
       { id: 'd23', user_id: 'demo-12', country: 'Finnland', city: 'Lappland', date_from: null, date_to: null },
@@ -183,7 +183,7 @@ const DEMO_CANDIDATES: DiscoverProfile[] = [
       bio: 'Afrikareisende & Fashion-Bloggerin ✨ Afrika zeigen wie es wirklich ist.',
       profile_image_url: 'https://randomuser.me/api/portraits/women/56.jpg',
       travel_style: 'city', languages: [], verified: true, is_premium: true,
-      onboarding_complete: true, created_at: '',
+      onboarding_complete: true, created_at: '', tagline: null, religion: null, photo_urls: null,
     },
     destinations: [
       { id: 'd25', user_id: 'demo-13', country: 'Senegal', city: 'Dakar', date_from: null, date_to: null },
@@ -196,7 +196,7 @@ const DEMO_CANDIDATES: DiscoverProfile[] = [
       id: 'demo-14', name: 'Carlos', age: 32, email: '', country: 'Mexiko',
       bio: 'Salsa-Tänzer & Hobbyköch 🌮 Unterwegs zwischen Strand und Berge.',
       profile_image_url: null, travel_style: 'adventure', languages: [], verified: false, is_premium: false,
-      onboarding_complete: true, created_at: '',
+      onboarding_complete: true, created_at: '', tagline: null, religion: null, photo_urls: null,
     },
     destinations: [
       { id: 'd27', user_id: 'demo-14', country: 'Kolumbien', city: 'Cartagena', date_from: null, date_to: null },
@@ -209,7 +209,7 @@ const DEMO_CANDIDATES: DiscoverProfile[] = [
       id: 'demo-15', name: 'Anna', age: 22, email: '', country: 'Polen',
       bio: 'Studentin & Backpackerin 🎒 Europa zuerst, dann die Welt!',
       profile_image_url: null, travel_style: 'backpacker', languages: [], verified: false, is_premium: false,
-      onboarding_complete: true, created_at: '',
+      onboarding_complete: true, created_at: '', tagline: null, religion: null, photo_urls: null,
     },
     destinations: [
       { id: 'd29', user_id: 'demo-15', country: 'Griechenland', city: 'Athen', date_from: null, date_to: null },
@@ -222,7 +222,7 @@ const DEMO_CANDIDATES: DiscoverProfile[] = [
       id: 'demo-16', name: 'Ben', age: 25, email: '', country: 'Australien',
       bio: 'Surf & Chill 🏄 Die Wellen rufen mich überall hin.',
       profile_image_url: null, travel_style: 'beach', languages: [], verified: false, is_premium: false,
-      onboarding_complete: true, created_at: '',
+      onboarding_complete: true, created_at: '', tagline: null, religion: null, photo_urls: null,
     },
     destinations: [
       { id: 'd31', user_id: 'demo-16', country: 'Indonesien', city: 'Lombok', date_from: null, date_to: null },
@@ -235,7 +235,7 @@ const DEMO_CANDIDATES: DiscoverProfile[] = [
       id: 'demo-17', name: 'Priya', age: 29, email: '', country: 'Indien',
       bio: 'Yoga-Lehrerin & Weltreisende 🧘 Spirituelle Orte & bunte Kulturen.',
       profile_image_url: null, travel_style: 'city', languages: [], verified: false, is_premium: false,
-      onboarding_complete: true, created_at: '',
+      onboarding_complete: true, created_at: '', tagline: null, religion: null, photo_urls: null,
     },
     destinations: [
       { id: 'd33', user_id: 'demo-17', country: 'Nepal', city: 'Pokhara', date_from: null, date_to: null },

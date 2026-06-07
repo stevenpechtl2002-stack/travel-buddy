@@ -114,6 +114,7 @@ export default function RegisterScreen() {
         tagline: '✈ Solo Traveler',
         bio,
         travelStyle: travelStyle.replace(/^.*?\s/, '') || 'Adventure',
+        religion: '',
         destinations: [],
         interests: selectedInterests,
         images: [],

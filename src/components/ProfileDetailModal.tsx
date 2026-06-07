@@ -8,7 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient'
 import { useRef, useState, useEffect } from 'react'
 
 const { width, height } = Dimensions.get('window')
-const PHOTO_H = height * 0.58
+const PHOTO_H = height * 0.72
 
 const DEMO_IMAGES: Record<string, any> = {
   'demo-1':  require('../../assets/demo/laura.jpg'),
@@ -72,17 +72,23 @@ export default function ProfileDetailModal({
   const [photoIndex, setPhotoIndex] = useState(0)
   const fadeAnim = useRef(new Animated.Value(1)).current
 
-  // Build the photos array: demo image first, then extras, then URL
+  // Build the photos array
   const sources: ImageSourcePropType[] = []
   if (DEMO_IMAGES[profile.id]) {
     sources.push(DEMO_IMAGES[profile.id])
+  } else if (profile.photo_urls && profile.photo_urls.length > 0) {
+    profile.photo_urls.forEach(uri => sources.push({ uri }))
   } else if (profile.profile_image_url) {
     sources.push({ uri: profile.profile_image_url })
   } else {
     sources.push(getFallback(profile.id))
   }
   if (extraImages) {
-    extraImages.forEach(uri => sources.push({ uri }))
+    extraImages.forEach(uri => {
+      if (!sources.some(s => typeof s === 'object' && 'uri' in s && s.uri === uri)) {
+        sources.push({ uri })
+      }
+    })
   }
 
   // Reset photo index when modal opens
@@ -115,13 +121,9 @@ export default function ProfileDetailModal({
             />
 
             {/* Left tap zone */}
-            {sources.length > 1 && (
-              <Pressable style={styles.tapLeft} onPress={() => goTo(photoIndex - 1)} />
-            )}
+            <Pressable style={styles.tapLeft} onPress={() => goTo(photoIndex - 1)} />
             {/* Right tap zone */}
-            {sources.length > 1 && (
-              <Pressable style={styles.tapRight} onPress={() => goTo(photoIndex + 1)} />
-            )}
+            <Pressable style={styles.tapRight} onPress={() => goTo(photoIndex + 1)} />
 
             {/* Progress dots (Instagram-style top bar) */}
             {sources.length > 1 && (
@@ -264,9 +266,9 @@ const styles = StyleSheet.create({
   photoWrap: { width, height: PHOTO_H, position: 'relative', overflow: 'hidden', backgroundColor: colors.surface },
   photo: { width: '100%', height: '100%' },
 
-  // Tap zones (middle strip, below dots)
-  tapLeft: { position: 'absolute', left: 0, top: 40, bottom: 80, width: '38%', zIndex: 5 },
-  tapRight: { position: 'absolute', right: 0, top: 40, bottom: 80, width: '38%', zIndex: 5 },
+  // Tap zones — full left/right halves
+  tapLeft: { position: 'absolute', left: 0, top: 0, bottom: 0, width: '50%', zIndex: 5 },
+  tapRight: { position: 'absolute', right: 0, top: 0, bottom: 0, width: '50%', zIndex: 5 },
 
   // Dots (Instagram-style top)
   dots: {

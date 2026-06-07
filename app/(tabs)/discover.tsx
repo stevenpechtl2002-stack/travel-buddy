@@ -1,19 +1,20 @@
 import MatchPopup from '@/src/components/MatchPopup'
 import SwipeCard, { SwipeCardRef } from '@/src/components/SwipeCard'
-import WalkingCamel from '@/src/components/WalkingCamel'
 import FlyingPlane from '@/src/components/FlyingPlane'
 import FilterModal, { Filters, DEFAULT_FILTERS } from '@/src/components/FilterModal'
 import UserSearchModal from '@/src/components/UserSearchModal'
 import SceneBackground from '@/src/components/SceneBackground'
+import PremiumModal from '@/src/components/PremiumModal'
 import { colors, gradients, spacing } from '@/src/constants/theme'
 import { useAuth } from '@/src/hooks/useAuth'
 import { addDemoMatch } from '@/src/lib/demoMatchStore'
 import { useDiscover } from '@/src/hooks/useDiscover'
 import { useSwipe } from '@/src/hooks/useSwipe'
+import { getLikesRemaining, recordLike, DAILY_LIMIT } from '@/src/hooks/useLikeLimit'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useRouter } from 'expo-router'
 import { useEffect, useRef, useState } from 'react'
-import { Animated, ActivityIndicator, Dimensions, Easing, Pressable, StyleSheet, Text, View } from 'react-native'
+import { ActivityIndicator, Dimensions, Pressable, StyleSheet, Text, View } from 'react-native'
 import ReAnimated, { useSharedValue, useAnimatedStyle, withRepeat, withSequence, withTiming, Easing as ReEasing } from 'react-native-reanimated'
 
 const SCREEN_WIDTH = Dimensions.get('window').width
@@ -28,9 +29,15 @@ export default function DiscoverScreen() {
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS)
   const [filterVisible, setFilterVisible] = useState(false)
   const [searchVisible, setSearchVisible] = useState(false)
+  const [premiumVisible, setPremiumVisible] = useState(false)
+  const [likesLeft, setLikesLeft] = useState(DAILY_LIMIT)
+  const isPremium = (session?.user as any)?.user_metadata?.is_premium ?? false
   const router = useRouter()
   const cardRef = useRef<SwipeCardRef>(null)
-  const camelX = useRef(new Animated.Value(-150)).current
+
+  useEffect(() => {
+    getLikesRemaining().then(setLikesLeft)
+  }, [])
   const planeX = useSharedValue(-200)
 
   const planeAnimStyle = useAnimatedStyle(() => ({
@@ -48,26 +55,6 @@ export default function DiscoverScreen() {
     )
   }, [])
 
-  useEffect(() => {
-    camelX.setValue(-150)
-    const walk = Animated.loop(
-      Animated.sequence([
-        Animated.timing(camelX, {
-          toValue: SCREEN_WIDTH + 150,
-          duration: 14000,
-          easing: Easing.linear,
-          useNativeDriver: true,
-        }),
-        Animated.timing(camelX, {
-          toValue: -150,
-          duration: 0,
-          useNativeDriver: true,
-        }),
-      ])
-    )
-    walk.start()
-    return () => { walk.stop(); camelX.setValue(-150) }
-  }, [])
 
   const filteredCandidates = candidates.filter(c => {
     const p = c.profile
@@ -75,6 +62,10 @@ export default function DiscoverScreen() {
     if (filters.gender !== 'all') {
       const g = (p as any).gender as string | undefined
       if (g && g !== filters.gender) return false
+    }
+    if (filters.religion !== 'all') {
+      const r = p.religion ?? 'Keine'
+      if (r !== filters.religion) return false
     }
     if (filters.destination) {
       const dest = filters.destination.toLowerCase()
@@ -93,6 +84,7 @@ export default function DiscoverScreen() {
 
   const activeFilterCount = [
     filters.gender !== 'all',
+    filters.religion !== 'all',
     filters.destination !== '',
     filters.origin !== '',
     filters.ageMin !== 18 || filters.ageMax !== 60,
@@ -111,8 +103,18 @@ export default function DiscoverScreen() {
     const isDemo = top.profile.id.startsWith('demo-')
     const remainingAfterRemove = filteredCandidates.length - 1
 
+    if (direction === 'right' && !isPremium) {
+      const remaining = await getLikesRemaining()
+      if (remaining <= 0) {
+        setPremiumVisible(true)
+        setProcessing(false)
+        return
+      }
+      const newRemaining = await recordLike()
+      setLikesLeft(newRemaining)
+    }
+
     if (isDemo) {
-      // Demo: 50% Match-Chance beim Rechts-Swipen
       if (direction === 'right' && Math.random() < 0.5) {
         setMatchInfo({ name: top.profile.name })
         addDemoMatch({
@@ -170,11 +172,16 @@ export default function DiscoverScreen() {
             {candidates.length > 0 ? 'Ändere deine Filtereinstellungen' : 'Schau später nochmal vorbei'}
           </Text>
           {candidates.length > 0 ? (
-            <Pressable style={styles.reloadButton} onPress={() => setFilterVisible(true)}>
-              <LinearGradient colors={gradients.brandH} style={styles.reloadGrad}>
-                <Text style={styles.reloadText}>Filter anpassen</Text>
-              </LinearGradient>
-            </Pressable>
+            <View style={{ gap: 10, width: '80%' }}>
+              <Pressable style={styles.reloadButton} onPress={() => setFilterVisible(true)}>
+                <LinearGradient colors={gradients.brandH} style={styles.reloadGrad}>
+                  <Text style={styles.reloadText}>⚙ Filter anpassen</Text>
+                </LinearGradient>
+              </Pressable>
+              <Pressable style={styles.resetButton} onPress={() => setFilters(DEFAULT_FILTERS)}>
+                <Text style={styles.resetButtonText}>✕ Filter zurücksetzen</Text>
+              </Pressable>
+            </View>
           ) : (
             <Pressable style={styles.reloadButton} onPress={reload}>
               <LinearGradient colors={gradients.brandH} style={styles.reloadGrad}>
@@ -187,6 +194,12 @@ export default function DiscoverScreen() {
       <ReAnimated.View style={[styles.plane, planeAnimStyle]} pointerEvents="none">
         <FlyingPlane />
       </ReAnimated.View>
+      <FilterModal
+        visible={filterVisible}
+        filters={filters}
+        onChange={setFilters}
+        onClose={() => setFilterVisible(false)}
+      />
     </View>
   )
 
@@ -212,8 +225,13 @@ export default function DiscoverScreen() {
           <Text style={styles.searchBtnText}>Suchen</Text>
         </Pressable>
 
-        {/* Filter + Profil rechts */}
+        {/* Filter + Likes + Profil rechts */}
         <View style={styles.headerRight}>
+          {!isPremium && (
+            <Pressable style={[styles.likesCounter, likesLeft <= 5 && styles.likesCounterLow]} onPress={() => setPremiumVisible(true)}>
+              <Text style={styles.likesCounterText}>♥ {likesLeft}</Text>
+            </Pressable>
+          )}
           <Pressable style={styles.filterBtn} onPress={() => setFilterVisible(true)}>
             {activeFilterCount > 0 && (
               <View style={styles.filterBadge}>
@@ -273,6 +291,13 @@ export default function DiscoverScreen() {
         currentUserId={userId}
         onClose={() => setSearchVisible(false)}
       />
+
+      <PremiumModal
+        visible={premiumVisible}
+        userId={userId}
+        onClose={() => setPremiumVisible(false)}
+        onUpgraded={() => setLikesLeft(999)}
+      />
     </View>
     </SceneBackground>
 
@@ -281,10 +306,6 @@ export default function DiscoverScreen() {
       <FlyingPlane />
     </ReAnimated.View>
 
-    {/* Camel outside SceneBackground */}
-    <Animated.View style={[styles.camel, { transform: [{ translateX: camelX }] }]} pointerEvents="none">
-      <WalkingCamel size={110} />
-    </Animated.View>
 
     </View>
   )
@@ -300,8 +321,10 @@ const styles = StyleSheet.create({
   emptyText: { fontSize: 18, fontWeight: 'bold', color: colors.text, marginBottom: 8 },
   emptySub: { fontSize: 14, color: colors.textMuted, marginBottom: spacing.lg },
   reloadButton: { borderRadius: 50, overflow: 'hidden' },
-  reloadGrad: { paddingHorizontal: 28, paddingVertical: 13 },
+  reloadGrad: { paddingHorizontal: 28, paddingVertical: 13, alignItems: 'center' },
   reloadText: { color: '#fff', fontWeight: 'bold', fontSize: 15 },
+  resetButton: { borderRadius: 50, borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.3)', paddingVertical: 13, alignItems: 'center' },
+  resetButtonText: { color: 'rgba(255,255,255,0.7)', fontWeight: '700', fontSize: 15 },
   header: { flexDirection: 'row', alignItems: 'center', gap: 8,
     paddingHorizontal: spacing.lg, paddingTop: 58, paddingBottom: 10 },
   logoGrad: { width: 36, height: 36, borderRadius: 11, justifyContent: 'center', alignItems: 'center' },
@@ -317,6 +340,10 @@ const styles = StyleSheet.create({
   searchBtnIcon: { fontSize: 14 },
   searchBtnText: { fontSize: 14, fontWeight: '700', color: colors.text },
   headerRight: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  likesCounter: { backgroundColor: 'rgba(255,255,255,0.12)', borderRadius: 14,
+    paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1, borderColor: 'rgba(255,255,255,0.2)' },
+  likesCounterLow: { backgroundColor: 'rgba(255,71,87,0.2)', borderColor: 'rgba(255,71,87,0.5)' },
+  likesCounterText: { color: '#fff', fontSize: 12, fontWeight: '800' },
   filterBtn: { width: 36, height: 36, borderRadius: 12,
     backgroundColor: 'rgba(245,240,235,0.1)', justifyContent: 'center', alignItems: 'center',
     borderWidth: 1, borderColor: 'rgba(245,240,235,0.18)' },
@@ -332,7 +359,6 @@ const styles = StyleSheet.create({
   cardWrapper: { flex: 1, paddingHorizontal: spacing.lg, justifyContent: 'flex-start', paddingTop: 4, zIndex: 10 },
   buttons: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center',
     paddingTop: 16, gap: 40, zIndex: 10 },
-  camel: { position: 'absolute', bottom: 92, zIndex: 1 },
   plane: { position: 'absolute', top: 95, zIndex: 999, elevation: 999 },
   nopeBtn: { width: 68, height: 68, borderRadius: 34,
     backgroundColor: 'rgba(245,240,235,0.1)',

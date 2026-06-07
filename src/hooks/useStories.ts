@@ -5,6 +5,7 @@ export interface Story {
   id: string
   user_id: string
   image_url: string
+  media_type: 'image' | 'video'
   caption: string | null
   created_at: string
   expires_at: string
@@ -33,7 +34,7 @@ export function useStories(userId: string) {
       // Fetch active stories (not expired) from last 24h
       const { data: storiesData } = await supabase
         .from('stories')
-        .select('id, user_id, image_url, caption, created_at, expires_at, seen_count')
+        .select('id, user_id, image_url, media_type, caption, created_at, expires_at, seen_count')
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false })
 
@@ -104,11 +105,12 @@ export function useStories(userId: string) {
     await load()
   }
 
-  const addStory = async (imageUrl: string, caption: string | null) => {
+  const addStory = async (imageUrl: string, caption: string | null, mediaType: 'image' | 'video' = 'image') => {
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
     const { error } = await supabase.from('stories').insert({
       user_id: userId,
       image_url: imageUrl,
+      media_type: mediaType,
       caption,
       expires_at: expiresAt,
     })

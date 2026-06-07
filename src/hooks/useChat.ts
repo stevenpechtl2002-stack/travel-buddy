@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { Message } from '../types'
@@ -13,21 +14,35 @@ const DEMO_REPLIES = [
   'Ja total! Vielleicht können wir uns ja sogar treffen 😄',
 ]
 
-// In-memory Nachrichten für Demo-Chats
-const demoChatMessages: Record<string, Message[]> = {}
+function chatKey(matchId: string) {
+  return `demo_chat_${matchId}`
+}
+
+async function loadDemoChatMessages(matchId: string): Promise<Message[]> {
+  try {
+    const raw = await AsyncStorage.getItem(chatKey(matchId))
+    return raw ? JSON.parse(raw) : []
+  } catch { return [] }
+}
+
+async function saveDemoChatMessages(matchId: string, msgs: Message[]) {
+  try {
+    await AsyncStorage.setItem(chatKey(matchId), JSON.stringify(msgs))
+  } catch {}
+}
 
 export function useChat(matchId: string, userId: string) {
   const isDemo = matchId.startsWith('demo-match-')
-  const [messages, setMessages] = useState<Message[]>(
-    isDemo ? (demoChatMessages[matchId] ?? []) : []
-  )
-  const [loading, setLoading] = useState(!isDemo)
+  const [messages, setMessages] = useState<Message[]>([])
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (isDemo) {
-      setMessages(demoChatMessages[matchId] ?? [])
-      setLoading(false)
+      loadDemoChatMessages(matchId).then(msgs => {
+        setMessages(msgs)
+        setLoading(false)
+      })
       return
     }
     if (!matchId) return
@@ -63,7 +78,6 @@ export function useChat(matchId: string, userId: string) {
 
   const sendMessage = async (content: string) => {
     if (isDemo) {
-      // Nachricht lokal speichern
       const newMsg: Message = {
         id: `demo-msg-${Date.now()}`,
         match_id: matchId,
@@ -71,11 +85,11 @@ export function useChat(matchId: string, userId: string) {
         content,
         created_at: new Date().toISOString(),
       }
-      demoChatMessages[matchId] = [...(demoChatMessages[matchId] ?? []), newMsg]
-      setMessages(prev => [...prev, newMsg])
+      const updated = [...messages, newMsg]
+      setMessages(updated)
+      saveDemoChatMessages(matchId, updated)
 
-      // Demo-Antwort nach kurzer Verzögerung
-      setTimeout(() => {
+      setTimeout(async () => {
         const reply: Message = {
           id: `demo-reply-${Date.now()}`,
           match_id: matchId,
@@ -83,8 +97,11 @@ export function useChat(matchId: string, userId: string) {
           content: DEMO_REPLIES[Math.floor(Math.random() * DEMO_REPLIES.length)],
           created_at: new Date().toISOString(),
         }
-        demoChatMessages[matchId] = [...(demoChatMessages[matchId] ?? []), reply]
-        setMessages(prev => [...prev, reply])
+        setMessages(prev => {
+          const next = [...prev, reply]
+          saveDemoChatMessages(matchId, next)
+          return next
+        })
       }, 1000 + Math.random() * 1500)
       return
     }

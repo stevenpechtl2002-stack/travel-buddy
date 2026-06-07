@@ -1,12 +1,34 @@
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Match } from '../types'
 
-// In-memory store for demo matches created during the session
+const STORAGE_KEY = 'demo_matches_v1'
 const listeners: Array<() => void> = []
-const demoMatches: Match[] = []
+let demoMatches: Match[] = []
+let loaded = false
+
+async function persist() {
+  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(demoMatches))
+}
+
+export async function loadDemoMatches() {
+  if (loaded) return
+  loaded = true
+  try {
+    const raw = await AsyncStorage.getItem(STORAGE_KEY)
+    if (raw) demoMatches = JSON.parse(raw)
+  } catch {}
+}
 
 export function addDemoMatch(match: Match) {
   if (demoMatches.find(m => m.id === match.id)) return
   demoMatches.unshift(match)
+  persist()
+  listeners.forEach(fn => fn())
+}
+
+export function removeDemoMatch(matchId: string) {
+  demoMatches = demoMatches.filter(m => m.id !== matchId)
+  persist()
   listeners.forEach(fn => fn())
 }
 

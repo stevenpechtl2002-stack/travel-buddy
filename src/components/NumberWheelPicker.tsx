@@ -4,16 +4,18 @@ import { colors } from '../constants/theme'
 
 const ITEM_H = 40
 const VISIBLE = 5
-const NUMBERS = Array.from({ length: 99 }, (_, i) => i + 2) // 2..100
 
 interface Props {
   value: number | null
   onChange: (n: number) => void
+  min?: number
+  max?: number
 }
 
-export default function NumberWheelPicker({ value, onChange }: Props) {
+export default function NumberWheelPicker({ value, onChange, min = 2, max = 100 }: Props) {
+  const NUMBERS = Array.from({ length: max - min + 1 }, (_, i) => i + min)
   const ref = useRef<ScrollView>(null)
-  const current = value ?? 10
+  const current = value ?? min
 
   useEffect(() => {
     const idx = NUMBERS.indexOf(current)

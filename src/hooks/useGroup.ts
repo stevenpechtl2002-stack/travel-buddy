@@ -4,6 +4,9 @@ import { Group, GroupMember, GroupRole, Profile } from '../types'
 
 export interface GroupDetail extends Group {
   members: (GroupMember & { profile: Profile })[]
+  max_members: number | null
+  allowed_gender: string
+  allowed_religion: string
 }
 
 export function useGroup(groupId: string, userId: string) {

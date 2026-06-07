@@ -42,6 +42,20 @@ export default function CreateGroupScreen() {
     if (!name.trim()) { Alert.alert('Fehler', 'Bitte gib einen Gruppennamen ein.'); return }
     setLoading(true)
     try {
+      const isPremium = !!(session?.user as any)?.user_metadata?.is_premium
+      if (!isPremium) {
+        const { count } = await supabase
+          .from('group_members')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', userId)
+          .eq('role', 'admin')
+        if ((count ?? 0) >= 3) {
+          setLoading(false)
+          Alert.alert('Limit erreicht', 'Mit dem kostenlosen Plan kannst du maximal 3 Gruppen erstellen. Upgrade auf Premium für unbegrenzte Gruppen.')
+          return
+        }
+      }
+
       const { data: group, error } = await supabase.from('groups').insert({
         name: `${emoji} ${name.trim()}`,
         description: description.trim() || null,

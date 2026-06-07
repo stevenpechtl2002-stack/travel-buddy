@@ -2,11 +2,11 @@ import ProfileEditModal, { ProfileData } from '@/src/components/ProfileEditModal
 import ProfilePreviewModal from '@/src/components/ProfilePreviewModal'
 import SceneBackground from '@/src/components/SceneBackground'
 import { useAuth } from '@/src/hooks/useAuth'
-import { useRouter } from 'expo-router'
+import { useRouter, useFocusEffect } from 'expo-router'
 import { useMyProfile } from '@/src/hooks/useMyProfile'
 import { colors, spacing } from '@/src/constants/theme'
 import { LinearGradient } from 'expo-linear-gradient'
-import { useState } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { ActivityIndicator, Alert, Image, ScrollView, StyleSheet, Text, View, Pressable } from 'react-native'
 import { supabase } from '@/src/lib/supabase'
 
@@ -17,23 +17,45 @@ export default function ProfileScreen() {
   const [editVisible, setEditVisible] = useState(false)
   const [previewVisible, setPreviewVisible] = useState(false)
   const [swipeStats, setSwipeStats] = useState({ likes: 0, dislikes: 0 })
+  const [matchesCount, setMatchesCount] = useState(0)
   const router = useRouter()
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
 
   // Show upload errors as an alert whenever they appear
   if (uploadError) {
     Alert.alert('Foto-Upload', uploadError, [{ text: 'OK', onPress: clearUploadError }])
   }
 
-  useState(() => {
+  const loadStats = useCallback(async () => {
     if (!userId) return
-    supabase.from('swipes').select('direction').eq('swiper_id', userId).then(({ data }) => {
-      if (!data) return
+    const [swipesRes, matchesRes] = await Promise.all([
+      supabase.from('swipes').select('direction').eq('swiper_id', userId),
+      supabase.from('matches').select('id', { count: 'exact', head: true })
+        .or(`user_a_id.eq.${userId},user_b_id.eq.${userId}`),
+    ])
+if (swipesRes.data) {
       setSwipeStats({
-        likes: data.filter(s => s.direction === 'right').length,
-        dislikes: data.filter(s => s.direction === 'left').length,
+        likes: swipesRes.data.filter(s => s.direction === 'right').length,
+        dislikes: swipesRes.data.filter(s => s.direction === 'left').length,
       })
-    })
-  })
+    }
+    setMatchesCount(matchesRes.count ?? 0)
+  }, [userId])
+
+  // Load on focus (tab switch)
+  useFocusEffect(useCallback(() => { loadStats() }, [loadStats]))
+
+  // Realtime subscriptions for live updates
+  useEffect(() => {
+    if (!userId) return
+    loadStats()
+    const ch = supabase.channel(`profile-stats-${userId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'swipes', filter: `swiper_id=eq.${userId}` }, () => loadStats())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'matches' }, () => loadStats())
+      .subscribe()
+    channelRef.current = ch
+    return () => { ch.unsubscribe() }
+  }, [userId])
 
   const handleSignOut = () => {
     Alert.alert('Ausloggen', 'Möchtest du dich wirklich ausloggen?', [
@@ -90,7 +112,7 @@ export default function ProfileScreen() {
 
         <View style={styles.statRow}>
           <View style={styles.stat}>
-            <Text style={styles.statNum}>13</Text>
+            <Text style={styles.statNum}>{matchesCount}</Text>
             <Text style={styles.statLabel}>Matches</Text>
           </View>
           <View style={styles.statDivider} />
@@ -141,6 +163,14 @@ export default function ProfileScreen() {
           <Text style={styles.previewBtnText}>👁 Vorschau</Text>
         </Pressable>
       </View>
+
+      {/* Wer hat mich geliked */}
+      <Pressable style={styles.likedMeBtn} onPress={() => router.push('/liked-me')}>
+        <LinearGradient colors={['rgba(255,140,0,0.2)', 'rgba(255,77,109,0.15)']} style={styles.likedMeGrad}>
+          <Text style={styles.likedMeText}>♥ Wer hat mich geliked</Text>
+          <Text style={styles.likedMeArrow}>›</Text>
+        </LinearGradient>
+      </Pressable>
 
       {/* Bio */}
       <View style={styles.card}>
@@ -197,6 +227,20 @@ export default function ProfileScreen() {
         </View>
       </View>
 
+
+      {/* Privacy + Liked posts */}
+      <View style={styles.settingsRow}>
+        <Pressable style={styles.settingsBtn} onPress={() => router.push('/privacy-settings')}>
+          <Text style={styles.settingsBtnIcon}>🔒</Text>
+          <Text style={styles.settingsBtnText}>Datenschutz</Text>
+          <Text style={styles.settingsBtnArrow}>›</Text>
+        </Pressable>
+        <Pressable style={styles.settingsBtn} onPress={() => router.push('/liked-posts')}>
+          <Text style={styles.settingsBtnIcon}>♥</Text>
+          <Text style={styles.settingsBtnText}>Gelikte Beiträge</Text>
+          <Text style={styles.settingsBtnArrow}>›</Text>
+        </Pressable>
+      </View>
 
       {/* Sign out */}
       <Pressable style={styles.signOutBtn} onPress={handleSignOut}>
@@ -280,6 +324,21 @@ const styles = StyleSheet.create({
     padding: 16, alignItems: 'center', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.6)' },
   previewBtnText: { color: '#1a1a2e', fontWeight: '800', fontSize: 15 },
 
+  likedMeBtn: { marginHorizontal: spacing.lg, marginTop: spacing.md, borderRadius: 20, overflow: 'hidden' },
+  likedMeGrad: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    padding: 18, borderWidth: 1, borderColor: 'rgba(255,140,0,0.3)', borderRadius: 20 },
+  likedMeText: { fontSize: 15, fontWeight: '800', color: '#fff' },
+  likedMeArrow: { fontSize: 22, color: colors.primary, fontWeight: '300' },
+  settingsRow: { marginHorizontal: spacing.lg, marginTop: spacing.md, gap: 10 },
+  settingsBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    borderRadius: 16, padding: 16,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)',
+  },
+  settingsBtnIcon: { fontSize: 18 },
+  settingsBtnText: { flex: 1, fontSize: 15, fontWeight: '700', color: '#fff' },
+  settingsBtnArrow: { fontSize: 20, color: 'rgba(255,255,255,0.3)', fontWeight: '300' },
   signOutBtn: { marginHorizontal: spacing.lg, marginTop: spacing.md, borderRadius: 50,
     backgroundColor: 'rgba(255,255,255,0.88)', borderWidth: 1.5,
     borderColor: 'rgba(255,255,255,0.6)', padding: 16, alignItems: 'center' },

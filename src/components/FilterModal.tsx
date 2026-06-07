@@ -1,11 +1,13 @@
 import { colors, gradients, spacing } from '../constants/theme'
 import { LinearGradient } from 'expo-linear-gradient'
 import { Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native'
+import NumberWheelPicker from './NumberWheelPicker'
 
 export interface Filters {
   ageMin: number
   ageMax: number
   gender: 'all' | 'male' | 'female'
+  religion: string
   destination: string
   origin: string
 }
@@ -14,6 +16,7 @@ export const DEFAULT_FILTERS: Filters = {
   ageMin: 18,
   ageMax: 60,
   gender: 'all',
+  religion: 'all',
   destination: '',
   origin: '',
 }
@@ -25,16 +28,26 @@ interface Props {
   onClose: () => void
 }
 
-const AGES = Array.from({ length: 43 }, (_, i) => i + 18)
-
 const POPULAR_DESTINATIONS = ['Thailand', 'Bali', 'Japan', 'Portugal', 'Marokko', 'Island', 'Australien', 'Mexiko', 'Spanien', 'Vietnam']
 const COUNTRIES = ['Deutschland', 'Österreich', 'Schweiz', 'USA', 'Frankreich', 'Italien', 'Spanien', 'Türkei', 'Kanada', 'Australien']
+
+const RELIGION_OPTIONS = [
+  { value: 'all', label: '🌍 Alle' },
+  { value: 'Christlich', label: '✝️ Christlich' },
+  { value: 'Islamisch', label: '☪️ Islamisch' },
+  { value: 'Hinduistisch', label: '🕉 Hinduistisch' },
+  { value: 'Buddhistisch', label: '☸️ Buddhistisch' },
+  { value: 'Jüdisch', label: '✡️ Jüdisch' },
+  { value: 'Andere', label: '🌍 Andere' },
+  { value: 'Keine', label: '⚪ Keine' },
+]
 
 export default function FilterModal({ visible, filters, onChange, onClose }: Props) {
   const set = (patch: Partial<Filters>) => onChange({ ...filters, ...patch })
 
   const activeCount = [
     filters.gender !== 'all',
+    filters.religion !== 'all',
     filters.destination !== '',
     filters.origin !== '',
     filters.ageMin !== 18 || filters.ageMax !== 60,
@@ -58,32 +71,28 @@ export default function FilterModal({ visible, filters, onChange, onClose }: Pro
 
         <ScrollView style={styles.content} contentContainerStyle={styles.contentInner}>
 
-          {/* Age */}
+          {/* Age wheels */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>🎂 Alter</Text>
-            <View style={styles.ageRow}>
-              <View style={styles.ageBox}>
-                <Text style={styles.ageLabel}>Von</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.ageScroll} contentContainerStyle={styles.ageScrollInner}>
-                  {AGES.map(a => (
-                    <Pressable key={a} style={[styles.ageChip, filters.ageMin === a && styles.ageChipActive]}
-                      onPress={() => set({ ageMin: Math.min(a, filters.ageMax) })}>
-                      <Text style={[styles.ageChipText, filters.ageMin === a && styles.ageChipTextActive]}>{a}</Text>
-                    </Pressable>
-                  ))}
-                </ScrollView>
+            <View style={styles.ageWheelRow}>
+              <View style={styles.ageWheelBox}>
+                <Text style={styles.ageWheelLabel}>Von</Text>
+                <NumberWheelPicker
+                  value={filters.ageMin}
+                  min={18}
+                  max={80}
+                  onChange={v => set({ ageMin: Math.min(v, filters.ageMax) })}
+                />
               </View>
               <Text style={styles.ageDash}>–</Text>
-              <View style={styles.ageBox}>
-                <Text style={styles.ageLabel}>Bis</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.ageScroll} contentContainerStyle={styles.ageScrollInner}>
-                  {AGES.map(a => (
-                    <Pressable key={a} style={[styles.ageChip, filters.ageMax === a && styles.ageChipActive]}
-                      onPress={() => set({ ageMax: Math.max(a, filters.ageMin) })}>
-                      <Text style={[styles.ageChipText, filters.ageMax === a && styles.ageChipTextActive]}>{a}</Text>
-                    </Pressable>
-                  ))}
-                </ScrollView>
+              <View style={styles.ageWheelBox}>
+                <Text style={styles.ageWheelLabel}>Bis</Text>
+                <NumberWheelPicker
+                  value={filters.ageMax}
+                  min={18}
+                  max={80}
+                  onChange={v => set({ ageMax: Math.max(v, filters.ageMin) })}
+                />
               </View>
             </View>
             <Text style={styles.ageDisplay}>{filters.ageMin} – {filters.ageMax} Jahre</Text>
@@ -92,20 +101,37 @@ export default function FilterModal({ visible, filters, onChange, onClose }: Pro
           {/* Gender */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>👤 Geschlecht</Text>
-            <View style={styles.genderRow}>
+            <View style={styles.chipRow}>
               {[
                 { value: 'all', label: '🌍 Alle' },
                 { value: 'female', label: '👩 Frauen' },
                 { value: 'male', label: '👨 Männer' },
               ].map(g => (
-                <Pressable key={g.value} style={[styles.genderChip, filters.gender === g.value && styles.genderChipActive]}
+                <Pressable key={g.value}
+                  style={[styles.filterChip, filters.gender === g.value && styles.filterChipActive]}
                   onPress={() => set({ gender: g.value as Filters['gender'] })}>
                   {filters.gender === g.value
-                    ? <LinearGradient colors={gradients.brandH} style={styles.genderGrad}>
-                        <Text style={styles.genderTextActive}>{g.label}</Text>
+                    ? <LinearGradient colors={gradients.brandH} style={styles.chipGrad}>
+                        <Text style={styles.filterChipTextActive}>{g.label}</Text>
                       </LinearGradient>
-                    : <Text style={styles.genderText}>{g.label}</Text>
+                    : <Text style={styles.filterChipText}>{g.label}</Text>
                   }
+                </Pressable>
+              ))}
+            </View>
+          </View>
+
+          {/* Religion */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>🕊 Religion</Text>
+            <View style={styles.wrapChips}>
+              {RELIGION_OPTIONS.map(r => (
+                <Pressable key={r.value}
+                  style={[styles.wrapChip, filters.religion === r.value && styles.wrapChipActive]}
+                  onPress={() => set({ religion: r.value })}>
+                  <Text style={[styles.wrapChipText, filters.religion === r.value && styles.wrapChipTextActive]}>
+                    {r.label}
+                  </Text>
                 </Pressable>
               ))}
             </View>
@@ -121,11 +147,12 @@ export default function FilterModal({ visible, filters, onChange, onClose }: Pro
               value={filters.destination}
               onChangeText={t => set({ destination: t })}
             />
-            <View style={styles.quickChips}>
+            <View style={styles.wrapChips}>
               {POPULAR_DESTINATIONS.map(d => (
-                <Pressable key={d} style={[styles.quickChip, filters.destination === d && styles.quickChipActive]}
+                <Pressable key={d}
+                  style={[styles.wrapChip, filters.destination === d && styles.wrapChipActive]}
                   onPress={() => set({ destination: filters.destination === d ? '' : d })}>
-                  <Text style={[styles.quickChipText, filters.destination === d && styles.quickChipTextActive]}>{d}</Text>
+                  <Text style={[styles.wrapChipText, filters.destination === d && styles.wrapChipTextActive]}>{d}</Text>
                 </Pressable>
               ))}
             </View>
@@ -141,11 +168,12 @@ export default function FilterModal({ visible, filters, onChange, onClose }: Pro
               value={filters.origin}
               onChangeText={t => set({ origin: t })}
             />
-            <View style={styles.quickChips}>
+            <View style={styles.wrapChips}>
               {COUNTRIES.map(c => (
-                <Pressable key={c} style={[styles.quickChip, filters.origin === c && styles.quickChipActive]}
+                <Pressable key={c}
+                  style={[styles.wrapChip, filters.origin === c && styles.wrapChipActive]}
                   onPress={() => set({ origin: filters.origin === c ? '' : c })}>
-                  <Text style={[styles.quickChipText, filters.origin === c && styles.quickChipTextActive]}>{c}</Text>
+                  <Text style={[styles.wrapChipText, filters.origin === c && styles.wrapChipTextActive]}>{c}</Text>
                 </Pressable>
               ))}
             </View>
@@ -154,7 +182,6 @@ export default function FilterModal({ visible, filters, onChange, onClose }: Pro
           <View style={{ height: 20 }} />
         </ScrollView>
 
-        {/* Apply button */}
         <Pressable style={styles.applyBtn} onPress={onClose}>
           <LinearGradient colors={gradients.brand} style={styles.applyGrad}>
             <Text style={styles.applyText}>✓ Filter anwenden</Text>
@@ -178,35 +205,27 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: colors.border, marginBottom: 12 },
   sectionTitle: { fontSize: 13, fontWeight: '800', color: colors.textMuted,
     letterSpacing: 1, textTransform: 'uppercase', marginBottom: 14 },
-  ageRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  ageBox: { flex: 1 },
-  ageLabel: { fontSize: 12, color: colors.textMuted, marginBottom: 6 },
-  ageScroll: { maxHeight: 40 },
-  ageScrollInner: { gap: 6, paddingRight: 8 },
-  ageChip: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.surfaceLight,
-    justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: colors.border },
-  ageChipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  ageChipText: { fontSize: 12, color: colors.textMuted, fontWeight: '600' },
-  ageChipTextActive: { color: '#fff' },
-  ageDash: { fontSize: 18, color: colors.textMuted, paddingTop: 20 },
-  ageDisplay: { textAlign: 'center', color: colors.primary, fontWeight: '800',
-    fontSize: 15, marginTop: 10 },
-  genderRow: { flexDirection: 'row', gap: 10 },
-  genderChip: { flex: 1, borderRadius: 50, overflow: 'hidden',
+  ageWheelRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 20 },
+  ageWheelBox: { alignItems: 'center', gap: 8 },
+  ageWheelLabel: { fontSize: 13, fontWeight: '700', color: colors.textMuted },
+  ageDash: { fontSize: 24, color: colors.textMuted, marginTop: 20 },
+  ageDisplay: { textAlign: 'center', color: colors.primary, fontWeight: '800', fontSize: 15, marginTop: 12 },
+  chipRow: { flexDirection: 'row', gap: 10 },
+  filterChip: { flex: 1, borderRadius: 50, overflow: 'hidden',
     backgroundColor: colors.surfaceLight, borderWidth: 1, borderColor: colors.border },
-  genderChipActive: { borderColor: 'transparent' },
-  genderGrad: { paddingVertical: 12, alignItems: 'center' },
-  genderText: { color: colors.textMuted, fontWeight: '700', fontSize: 13,
+  filterChipActive: { borderColor: 'transparent' },
+  chipGrad: { paddingVertical: 12, alignItems: 'center' },
+  filterChipText: { color: colors.textMuted, fontWeight: '700', fontSize: 13,
     textAlign: 'center', paddingVertical: 12 },
-  genderTextActive: { color: '#fff', fontWeight: '800', fontSize: 13 },
+  filterChipTextActive: { color: '#fff', fontWeight: '800', fontSize: 13 },
+  wrapChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  wrapChip: { backgroundColor: colors.surfaceLight, borderRadius: 50,
+    paddingHorizontal: 14, paddingVertical: 8, borderWidth: 1, borderColor: colors.border },
+  wrapChipActive: { borderColor: colors.primary, backgroundColor: 'rgba(255,140,0,0.15)' },
+  wrapChipText: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
+  wrapChipTextActive: { color: colors.primary },
   input: { backgroundColor: colors.surfaceLight, borderRadius: 14, padding: 14,
     color: colors.text, fontSize: 15, borderWidth: 1, borderColor: colors.border, marginBottom: 12 },
-  quickChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  quickChip: { backgroundColor: colors.surfaceLight, borderRadius: 50,
-    paddingHorizontal: 14, paddingVertical: 8, borderWidth: 1, borderColor: colors.border },
-  quickChipActive: { borderColor: colors.primary, backgroundColor: 'rgba(255,140,0,0.15)' },
-  quickChipText: { color: colors.textMuted, fontSize: 13, fontWeight: '600' },
-  quickChipTextActive: { color: colors.primary },
   applyBtn: { margin: spacing.lg, borderRadius: 50, overflow: 'hidden' },
   applyGrad: { padding: 18, alignItems: 'center' },
   applyText: { color: '#fff', fontWeight: '900', fontSize: 17 },

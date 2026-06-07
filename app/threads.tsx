@@ -4,16 +4,21 @@ import { supabase } from '@/src/lib/supabase'
 import { LinearGradient } from 'expo-linear-gradient'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { useCallback, useState } from 'react'
+import * as ImagePicker from 'expo-image-picker'
+import * as FileSystem from 'expo-file-system/legacy'
 import {
   ActivityIndicator, Alert, FlatList, Image, KeyboardAvoidingView,
-  Modal, Platform, Pressable, RefreshControl,
+  Modal, Platform, Pressable, RefreshControl, ScrollView,
   StyleSheet, Text, TextInput, View,
 } from 'react-native'
+
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? ''
 
 interface ThreadPost {
   id: string
   user_id: string
   content: string
+  image_url: string | null
   location: string | null
   like_count: number
   comment_count: number
@@ -44,20 +49,45 @@ function ComposeModal({ visible, userId, onClose, onDone }: {
 }) {
   const [text, setText] = useState('')
   const [location, setLocation] = useState('')
+  const [imageUri, setImageUri] = useState<string | null>(null)
   const [posting, setPosting] = useState(false)
 
-  const reset = () => { setText(''); setLocation('') }
+  const reset = () => { setText(''); setLocation(''); setImageUri(null) }
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
+    if (status !== 'granted') return
+    const res = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, quality: 0.85 })
+    if (!res.canceled) setImageUri(res.assets[0].uri)
+  }
+
+  const uploadImage = async (uri: string): Promise<string> => {
+    const ext = uri.split('?')[0].split('.').pop()?.toLowerCase() ?? 'jpg'
+    const fname = `threads/${userId}/${Date.now()}.${ext}`
+    const { data: { session } } = await supabase.auth.getSession()
+    const token = session?.access_token
+    if (!token) throw new Error('Nicht eingeloggt')
+    const res = await FileSystem.uploadAsync(
+      `${SUPABASE_URL}/storage/v1/object/profile-images/${fname}`, uri,
+      { httpMethod: 'POST', uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'image/jpeg', 'x-upsert': 'true' } }
+    )
+    if (res.status < 200 || res.status >= 300) throw new Error(`Upload ${res.status}`)
+    return supabase.storage.from('profile-images').getPublicUrl(fname).data.publicUrl
+  }
 
   const handlePost = async () => {
-    if (!text.trim()) { Alert.alert('', 'Schreib etwas für deinen Thread'); return }
+    if (!text.trim() && !imageUri) { Alert.alert('', 'Schreib etwas oder füge ein Bild hinzu'); return }
     setPosting(true)
     try {
+      let imgUrl: string | null = null
+      if (imageUri) imgUrl = await uploadImage(imageUri)
       const { error } = await supabase.from('posts').insert({
         user_id: userId,
-        content: text.trim(),
-        image_url: null,
+        content: text.trim() || null,
+        image_url: imgUrl,
         location: location.trim() || null,
-        type: 'post',
+        type: 'thread',
         like_count: 0, repost_count: 0, comment_count: 0,
       })
       if (error) throw new Error(error.message)
@@ -78,7 +108,7 @@ function ComposeModal({ visible, userId, onClose, onDone }: {
               <Text style={cs.cancel}>Abbrechen</Text>
             </Pressable>
             <Text style={cs.title}>Neuer Thread</Text>
-            <Pressable onPress={handlePost} disabled={posting || !text.trim()} style={cs.postBtn}>
+            <Pressable onPress={handlePost} disabled={posting} style={cs.postBtn}>
               <LinearGradient colors={gradients.brand} style={cs.postBtnGrad}>
                 {posting
                   ? <ActivityIndicator color="#fff" size="small" />
@@ -86,37 +116,59 @@ function ComposeModal({ visible, userId, onClose, onDone }: {
               </LinearGradient>
             </Pressable>
           </View>
-          <TextInput
-            style={cs.input}
-            value={text}
-            onChangeText={setText}
-            placeholder="Was denkst du? 💭"
-            placeholderTextColor="rgba(245,240,235,0.3)"
-            multiline
-            autoFocus
-          />
-          <TextInput
-            style={cs.locationInput}
-            value={location}
-            onChangeText={setLocation}
-            placeholder="📍 Ort (optional)"
-            placeholderTextColor="rgba(245,240,235,0.3)"
-          />
+          <ScrollView keyboardShouldPersistTaps="handled" style={{ flex: 1 }}>
+            <TextInput
+              style={cs.input}
+              value={text}
+              onChangeText={setText}
+              placeholder="Was denkst du? 💭"
+              placeholderTextColor="rgba(245,240,235,0.3)"
+              multiline
+              autoFocus
+            />
+            {imageUri ? (
+              <View style={{ position: 'relative', marginBottom: 12 }}>
+                <Image source={{ uri: imageUri }} style={cs.imgPreview} resizeMode="cover" />
+                <Pressable style={cs.removeImg} onPress={() => setImageUri(null)}>
+                  <Text style={{ color: '#fff', fontWeight: '800', fontSize: 13 }}>✕</Text>
+                </Pressable>
+              </View>
+            ) : null}
+            <TextInput
+              style={cs.locationInput}
+              value={location}
+              onChangeText={setLocation}
+              placeholder="📍 Ort (optional)"
+              placeholderTextColor="rgba(245,240,235,0.3)"
+            />
+          </ScrollView>
+          <View style={cs.toolbar}>
+            <Pressable style={cs.toolbarBtn} onPress={pickImage}>
+              <Text style={cs.toolbarIcon}>🖼</Text>
+              <Text style={cs.toolbarLabel}>Foto</Text>
+            </Pressable>
+          </View>
         </View>
       </KeyboardAvoidingView>
     </Modal>
   )
 }
 const cs = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0d1b2e', padding: 20 },
+  root: { flex: 1, backgroundColor: '#0d1b2e', padding: 20, paddingBottom: 0 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 },
   cancel: { fontSize: 15, color: colors.textMuted, fontWeight: '600' },
   title: { fontSize: 17, fontWeight: '900', color: colors.text },
   postBtn: { borderRadius: 20, overflow: 'hidden' },
   postBtnGrad: { paddingHorizontal: 18, paddingVertical: 8 },
   postBtnText: { color: '#fff', fontWeight: '900', fontSize: 14 },
-  input: { fontSize: 17, color: colors.text, lineHeight: 26, minHeight: 120, textAlignVertical: 'top', marginBottom: 12 },
-  locationInput: { fontSize: 14, color: colors.textMuted, borderTopWidth: 1, borderColor: 'rgba(245,240,235,0.08)', paddingTop: 12 },
+  input: { fontSize: 17, color: colors.text, lineHeight: 26, minHeight: 100, textAlignVertical: 'top', marginBottom: 12 },
+  imgPreview: { width: '100%', height: 200, borderRadius: 14 },
+  removeImg: { position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' },
+  locationInput: { fontSize: 14, color: colors.textMuted, borderTopWidth: 1, borderColor: 'rgba(245,240,235,0.08)', paddingTop: 12, paddingBottom: 12 },
+  toolbar: { flexDirection: 'row', paddingVertical: 12, borderTopWidth: 1, borderColor: 'rgba(245,240,235,0.08)', paddingBottom: 30 },
+  toolbarBtn: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  toolbarIcon: { fontSize: 22 },
+  toolbarLabel: { fontSize: 13, color: colors.textMuted, fontWeight: '600' },
 })
 
 // ── Thread Card ───────────────────────────────────────────────
@@ -142,7 +194,12 @@ function ThreadCard({ post, currentUserId, onDelete }: {
       </View>
       <View style={styles.threadBody}>
         <View style={styles.accentBar} />
-        <Text style={styles.threadText}>{post.content}</Text>
+        <View style={{ flex: 1 }}>
+          {post.content ? <Text style={styles.threadText}>{post.content}</Text> : null}
+          {post.image_url ? (
+            <Image source={{ uri: post.image_url }} style={styles.threadImage} resizeMode="cover" />
+          ) : null}
+        </View>
       </View>
       <View style={styles.actions}>
         <View style={styles.actionItem}>
@@ -226,9 +283,8 @@ export default function ThreadsScreen() {
     try {
       const { data, error } = await supabase
         .from('posts')
-        .select('id, user_id, content, location, like_count, comment_count, created_at')
-        .is('image_url', null)
-        .not('content', 'is', null)
+        .select('id, user_id, content, image_url, location, like_count, comment_count, created_at')
+        .eq('type', 'thread')
         .order('created_at', { ascending: false })
         .limit(60)
 
@@ -351,7 +407,8 @@ const styles = StyleSheet.create({
   deleteBtn: { padding: 8 },
   threadBody: { flexDirection: 'row', gap: 10, marginBottom: 14 },
   accentBar: { width: 3, borderRadius: 2, backgroundColor: colors.primary },
-  threadText: { flex: 1, fontSize: 17, color: colors.text, lineHeight: 26 },
+  threadText: { fontSize: 17, color: colors.text, lineHeight: 26, marginBottom: 8 },
+  threadImage: { width: '100%', height: 220, borderRadius: 14, marginTop: 4 },
   actions: { flexDirection: 'row', gap: 20 },
   actionItem: { flexDirection: 'row', alignItems: 'center', gap: 5 },
   actionIcon: { fontSize: 18, color: colors.textMuted },

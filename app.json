@@ -1,15 +1,19 @@
 {
   "expo": {
-    "name": "travel-buddy",
-    "slug": "travel-buddy",
+    "name": "Travel Mate",
+    "slug": "travel-mate",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "travelbuddy",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.travel-buddy"
+      "supportsTablet": false,
+      "bundleIdentifier": "com.stevenpechtl.travelmate",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -36,10 +40,17 @@
         }
       ],
       "expo-secure-store",
-      "expo-image"
+      "expo-image",
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "6b331a69-bd01-457b-b435-1f20330c38b2"
+      }
     }
   }
 }

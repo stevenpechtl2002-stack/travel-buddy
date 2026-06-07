@@ -13,7 +13,7 @@ const mockProfile = {
   bio: 'Adventure seeker', profile_image_url: null,
   travel_style: 'backpacker' as const, languages: ['DE', 'EN'],
   verified: false, is_premium: false, email: '', created_at: '',
-  onboarding_complete: true,
+  onboarding_complete: true, tagline: null, religion: null, photo_urls: null,
 }
 
 test('renders profile name', () => {

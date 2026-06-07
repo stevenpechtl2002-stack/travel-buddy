@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { Match, Profile } from '../types'
-import { getDemoMatches, subscribeDemoMatches } from '../lib/demoMatchStore'
+import { getDemoMatches, loadDemoMatches, subscribeDemoMatches } from '../lib/demoMatchStore'
 
 const DEMO_MATCHES: Match[] = [
   {
@@ -14,7 +14,7 @@ const DEMO_MATCHES: Match[] = [
       bio: 'Solo-Reisende auf der Suche nach Abenteuern 🌏',
       profile_image_url: null, travel_style: 'adventure',
       languages: [], verified: false, is_premium: false,
-      onboarding_complete: true, created_at: '',
+      onboarding_complete: true, created_at: '', tagline: null, religion: null, photo_urls: null,
     },
   },
   {
@@ -27,7 +27,7 @@ const DEMO_MATCHES: Match[] = [
       bio: 'Backpacker & Kaffeeliebhaber ☕',
       profile_image_url: null, travel_style: 'backpacker',
       languages: [], verified: false, is_premium: false,
-      onboarding_complete: true, created_at: '',
+      onboarding_complete: true, created_at: '', tagline: null, religion: null, photo_urls: null,
     },
   },
 ]
@@ -39,13 +39,14 @@ export function useMatches(userId: string) {
 
   useEffect(() => {
     if (!userId) {
-      setMatches(DEMO_MATCHES)
-      setLoading(false)
+      loadDemoMatches().then(() => {
+        setMatches(getDemoMatches().length > 0 ? getDemoMatches() : DEMO_MATCHES)
+        setLoading(false)
+      })
       return
     }
-    loadMatches()
+    loadDemoMatches().then(() => loadMatches())
 
-    // Live-Update wenn ein Demo-Match hinzukommt
     const unsubscribe = subscribeDemoMatches(() => {
       setMatches(prev => {
         const demo = getDemoMatches()

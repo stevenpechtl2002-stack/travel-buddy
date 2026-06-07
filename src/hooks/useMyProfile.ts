@@ -58,6 +58,13 @@ export function useMyProfile(userId: string) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [userEmail, setUserEmail] = useState<string>('')
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setUserEmail(data.session?.user.email ?? '')
+    })
+  }, [userId])
 
   useEffect(() => { load() }, [userId])
 
@@ -66,7 +73,7 @@ export function useMyProfile(userId: string) {
     try {
       if (userId) {
         const [{ data: p }, { data: dests }, { data: ints }] = await Promise.all([
-          supabase.from('profiles').select('*').eq('id', userId).single(),
+          supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
           supabase.from('travel_destinations').select('*').eq('user_id', userId),
           supabase.from('user_interests').select('*').eq('user_id', userId),
         ])
@@ -84,10 +91,15 @@ export function useMyProfile(userId: string) {
           return
         }
       }
+      // Kein Profil in Supabase → AsyncStorage als Fallback
       const raw = await AsyncStorage.getItem(STORAGE_KEY)
       if (raw) setProfileState(JSON.parse(raw))
     } catch {
-      // use default
+      // Supabase-Fehler → trotzdem AsyncStorage versuchen
+      try {
+        const raw = await AsyncStorage.getItem(STORAGE_KEY)
+        if (raw) setProfileState(JSON.parse(raw))
+      } catch {}
     } finally {
       setLoading(false)
     }
@@ -128,6 +140,7 @@ export function useMyProfile(userId: string) {
 
         const { error: upsertError } = await supabase.from('profiles').upsert({
           id: userId,
+          email: userEmail,
           name: data.name,
           bio: data.bio,
           travel_style: data.travelStyle.toLowerCase() as any,
@@ -137,7 +150,10 @@ export function useMyProfile(userId: string) {
           religion: data.religion || null,
         } as any, { onConflict: 'id' })
 
-        if (upsertError) console.warn('Profile upsert error:', upsertError.message)
+        if (upsertError) {
+          console.error('Profile upsert error:', upsertError.message)
+          setUploadError(`Profil konnte nicht gespeichert werden: ${upsertError.message}`)
+        }
 
         // Save destinations
         await supabase.from('travel_destinations').delete().eq('user_id', userId)
